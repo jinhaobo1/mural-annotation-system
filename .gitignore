@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 数据库（本地生成，不随仓库分发）
+*.db
+*.db-shm
+*.db-wal
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
