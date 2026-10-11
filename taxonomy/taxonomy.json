@@ -1,8 +1,238 @@
 {
   "_owner": "贾涵玉（A乙·体系与评测）",
-  "_todo": "对照教程第2章填实：11个一级实体类别、HUMAN 9个二级类别、14个一级场景、5大关系族共43个关系类型。填完后删除所有 _ 前缀字段。",
-  "entity_classes": [],
-  "human_subclasses": [],
-  "scenes": [],
-  "relation_families": []
+  "_source": "从 frontend/assets/shared.js 的 defaultAnnotationTaxonomy() + getSceneHierarchy() 抽取，与前端默认值一致",
+  "version": "v1.2-custom",
+  "terms": [
+    { "id": "HUMAN", "name": "人物", "parent": null, "level": 1 },
+    { "id": "ANIMAL", "name": "真实动物", "parent": null, "level": 1 },
+    { "id": "SUPERNATURAL", "name": "神异形象", "parent": null, "level": 1 },
+    { "id": "OBJECT", "name": "器物", "parent": null, "level": 1 },
+    { "id": "FURNITURE", "name": "家具陈设", "parent": null, "level": 1 },
+    { "id": "VEHICLE", "name": "交通工具", "parent": null, "level": 1 },
+    { "id": "ARCHITECTURE", "name": "建筑设施", "parent": null, "level": 1 },
+    { "id": "PLANT_NATURE", "name": "植物与自然物", "parent": null, "level": 1 },
+    { "id": "CELESTIAL", "name": "天象", "parent": null, "level": 1 },
+    { "id": "ORNAMENT", "name": "装饰纹样", "parent": null, "level": 1 },
+    { "id": "INSCRIPTION", "name": "文字题记", "parent": null, "level": 1 },
+
+    { "id": "HUMAN_OWNER", "name": "主人类", "parent": "HUMAN", "level": 2 },
+    { "id": "TOMB_OWNER", "name": "墓主人", "parent": "HUMAN_OWNER", "level": 3 },
+    { "id": "LADY", "name": "夫人", "parent": "HUMAN_OWNER", "level": 3 },
+
+    { "id": "HUMAN_ATTENDANT", "name": "侍从类", "parent": "HUMAN", "level": 2 },
+    { "id": "FEMALE_ATTENDANT", "name": "侍女", "parent": "HUMAN_ATTENDANT", "level": 3 },
+    { "id": "MALE_ATTENDANT", "name": "男侍", "parent": "HUMAN_ATTENDANT", "level": 3 },
+    { "id": "ATTENDANT_GENERIC", "name": "侍者", "parent": "HUMAN_ATTENDANT", "level": 3 },
+    { "id": "SERVANT", "name": "仆人", "parent": "HUMAN_ATTENDANT", "level": 3 },
+    { "id": "SLAVE", "name": "奴婢", "parent": "HUMAN_ATTENDANT", "level": 3 },
+    { "id": "PAGE_BOY", "name": "僮仆", "parent": "HUMAN_ATTENDANT", "level": 3 },
+
+    { "id": "HUMAN_OFFICIAL", "name": "官吏类", "parent": "HUMAN", "level": 2 },
+    { "id": "CIVIL_OFFICIAL", "name": "文吏", "parent": "HUMAN_OFFICIAL", "level": 3 },
+    { "id": "DOOR_OFFICIAL", "name": "门吏", "parent": "HUMAN_OFFICIAL", "level": 3 },
+
+    { "id": "HUMAN_MILITARY", "name": "武职类", "parent": "HUMAN", "level": 2 },
+    { "id": "MILITARY_OFFICIAL", "name": "武职人物", "parent": "HUMAN_MILITARY", "level": 3 },
+
+    { "id": "HUMAN_PERFORMER", "name": "乐舞表演类", "parent": "HUMAN", "level": 2 },
+    { "id": "MUSICIAN", "name": "乐伎/乐师", "parent": "HUMAN_PERFORMER", "level": 3 },
+    { "id": "DANCER", "name": "舞者", "parent": "HUMAN_PERFORMER", "level": 3 },
+
+    { "id": "HUMAN_LABOR", "name": "劳作类", "parent": "HUMAN", "level": 2 },
+    { "id": "HUMAN_RELIGIOUS", "name": "宗教人物类", "parent": "HUMAN", "level": 2 },
+    { "id": "HUMAN_HISTORICAL", "name": "历史人物类", "parent": "HUMAN", "level": 2 },
+
+    { "id": "HUMAN_ORDINARY", "name": "普通人物", "parent": "HUMAN", "level": 2 },
+    { "id": "GENERIC_PERSON", "name": "普通人物（未细分）", "parent": "HUMAN_ORDINARY", "level": 3 },
+
+    { "id": "ANIMAL_DOMESTIC", "name": "家畜", "parent": "ANIMAL", "level": 2 },
+    { "id": "HORSE", "name": "马", "parent": "ANIMAL_DOMESTIC", "level": 3 },
+    { "id": "CATTLE", "name": "牛", "parent": "ANIMAL_DOMESTIC", "level": 3 },
+    { "id": "SHEEP", "name": "羊", "parent": "ANIMAL_DOMESTIC", "level": 3 },
+
+    { "id": "FOUR_SYMBOLS", "name": "四神类", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "AZURE_DRAGON", "name": "青龙", "parent": "FOUR_SYMBOLS", "level": 3 },
+    { "id": "WHITE_TIGER", "name": "白虎", "parent": "FOUR_SYMBOLS", "level": 3 },
+    { "id": "VERMILION_BIRD", "name": "朱雀", "parent": "FOUR_SYMBOLS", "level": 3 },
+    { "id": "BLACK_TORTOISE", "name": "玄武", "parent": "FOUR_SYMBOLS", "level": 3 },
+    { "id": "DIVINE_BEAST", "name": "神兽类", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "FEATHERED_PERSON", "name": "羽人", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "FUXI", "name": "伏羲", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "NUWA", "name": "女娲", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "XIWANGMU", "name": "西王母", "parent": "SUPERNATURAL", "level": 2 },
+    { "id": "DONGWANGGONG", "name": "东王公", "parent": "SUPERNATURAL", "level": 2 },
+
+    { "id": "OBJECT_DINING", "name": "饮食器", "parent": "OBJECT", "level": 2 },
+    { "id": "PLATE", "name": "盘", "parent": "OBJECT_DINING", "level": 3 },
+    { "id": "EAR_CUP", "name": "耳杯", "parent": "OBJECT_DINING", "level": 3 },
+    { "id": "JUG", "name": "壶", "parent": "OBJECT_DINING", "level": 3 },
+    { "id": "OBJECT_MUSIC", "name": "乐器", "parent": "OBJECT", "level": 2 },
+    { "id": "PIPA", "name": "琵琶", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "FLUTE", "name": "横笛", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "WAIST_DRUM", "name": "腰鼓", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "BIG_DRUM", "name": "大鼓", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "KONGHOU", "name": "箜篌", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "RUANXIAN", "name": "阮咸", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "PAIBAN", "name": "拍板", "parent": "OBJECT_MUSIC", "level": 3 },
+    { "id": "OBJECT_WEAPON", "name": "武器", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_CEREMONIAL", "name": "仪仗器", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_FARM", "name": "农具", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_KITCHEN", "name": "厨具", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_STATIONERY", "name": "文房用品", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_DAILY", "name": "生活用品", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_FOOD", "name": "食物", "parent": "OBJECT", "level": 2 },
+    { "id": "OBJECT_OTHER", "name": "其他器物", "parent": "OBJECT", "level": 2 },
+
+    { "id": "SEATING", "name": "坐具", "parent": "FURNITURE", "level": 2 },
+    { "id": "CHAIR", "name": "椅", "parent": "SEATING", "level": 3 },
+    { "id": "COUCH", "name": "榻", "parent": "SEATING", "level": 3 },
+
+    { "id": "CART", "name": "车舆", "parent": "VEHICLE", "level": 2 },
+    { "id": "HORSE_CART", "name": "马车", "parent": "CART", "level": 3 },
+
+    { "id": "ARCH_STRUCTURE", "name": "建筑物", "parent": "ARCHITECTURE", "level": 2 },
+    { "id": "PAVILION", "name": "亭阁", "parent": "ARCH_STRUCTURE", "level": 3 },
+
+    { "id": "PLANT", "name": "植物", "parent": "PLANT_NATURE", "level": 2 },
+    { "id": "TREE", "name": "树木", "parent": "PLANT", "level": 3 }
+  ],
+  "fact_schemas": [
+    { "kind": "attributes", "code": "gender", "name": "性别", "applies_to": ["HUMAN"], "values": ["男", "女", "不详"] },
+    { "kind": "attributes", "code": "age_group", "name": "年龄阶段", "applies_to": ["HUMAN"], "values": ["儿童", "青年", "中年", "老年", "不详"] },
+    { "kind": "attributes", "code": "hairstyle", "name": "发式", "applies_to": ["HUMAN"], "values": ["双髻", "高髻", "束发", "倭堕髻", "披发", "不详"] },
+    { "kind": "attributes", "code": "headwear", "name": "冠帽", "applies_to": ["HUMAN"], "values": ["尖山小冠", "进贤冠", "介帻", "展脚幞头", "软脚幞头", "无冠帽", "不详"] },
+    { "kind": "attributes", "code": "upper_garment", "name": "上装", "applies_to": ["HUMAN"], "values": ["交领衫", "圆领窄袖袍", "交领袍", "百戏衫", "不详"] },
+    { "kind": "attributes", "code": "lower_garment", "name": "下装", "applies_to": ["HUMAN"], "values": ["曳地长裙", "长裙", "裤", "不详"] },
+    { "kind": "attributes", "code": "body_feature", "name": "身体特征", "applies_to": ["HUMAN"], "values": ["腹部隆起", "胡须", "丰腴", "瘦削", "不详"] },
+    { "kind": "states", "code": "posture", "name": "姿态", "applies_to": ["HUMAN"], "values": ["站立", "端坐", "盘腿而坐", "跪坐", "席地而坐", "俯身", "匍匐", "不详"] },
+    { "kind": "states", "code": "orientation", "name": "朝向", "applies_to": ["HUMAN"], "values": ["正面", "侧身", "面向左", "面向右", "昂首", "低头", "不详"] },
+    { "kind": "actions", "code": "gesture", "name": "手势动作", "applies_to": ["HUMAN"], "values": ["拱手", "作揖", "指点", "挥袖", "双手置腹前", "不详"] },
+    { "kind": "actions", "code": "performance_action", "name": "表演动作", "applies_to": ["HUMAN"], "values": ["起舞", "细步曼舞", "奏乐", "击鼓", "吹奏", "不详"] },
+    { "kind": "actions", "code": "social_action", "name": "社交动作", "applies_to": ["HUMAN"], "values": ["施礼", "观赏", "交谈", "侍立", "不详"] },
+    { "kind": "actions", "code": "locomotion", "name": "移动动作", "applies_to": ["HUMAN"], "values": ["行走", "奔跑", "骑行", "不详"] },
+    { "kind": "attributes", "code": "animal_color", "name": "动物颜色", "applies_to": ["ANIMAL"], "values": ["白", "黑", "黄", "褐", "杂色", "不详"] },
+    { "kind": "states", "code": "animal_posture", "name": "动物姿态", "applies_to": ["ANIMAL"], "values": ["站立", "行走", "奔跑", "卧", "不详"] },
+    { "kind": "actions", "code": "animal_action", "name": "动物动作", "applies_to": ["ANIMAL"], "values": ["奔跑", "饮水", "进食", "拉车", "不详"] },
+    { "kind": "attributes", "code": "object_material", "name": "材质", "applies_to": ["OBJECT"], "values": ["陶", "铜", "木", "漆", "不详"] },
+    { "kind": "attributes", "code": "object_color", "name": "颜色", "applies_to": ["OBJECT"], "values": ["红", "黑", "白", "黄", "青", "不详"] }
+  ],
+  "scenes": ["人物生活", "宴饮饮食", "乐舞娱乐", "出行仪仗", "生产劳动", "狩猎", "礼仪宗教", "历史故事", "神话祥瑞", "天象生肖", "花鸟山水", "建筑陈设", "装饰图案", "其他"],
+  "scene_hierarchy": [
+    { "id": "SCENE_LIFE", "name": "人物生活", "children": [
+      { "id": "SCENE_INTERACTION", "name": "人物互动" },
+      { "id": "SCENE_ATTENDANCE", "name": "侍奉" },
+      { "id": "SCENE_DAILY", "name": "日常起居" }
+    ]},
+    { "id": "SCENE_BANQUET", "name": "宴饮饮食", "children": [
+      { "id": "SCENE_FEAST", "name": "宴饮" },
+      { "id": "SCENE_PREP_FEAST", "name": "备宴" },
+      { "id": "SCENE_SERVE_DRINK", "name": "进酒/奉茶" },
+      { "id": "SCENE_KITCHEN", "name": "庖厨" },
+      { "id": "SCENE_STORAGE", "name": "仓储" }
+    ]},
+    { "id": "SCENE_PERFORMANCE", "name": "乐舞娱乐", "children": [
+      { "id": "SCENE_MUSIC", "name": "奏乐" },
+      { "id": "SCENE_DANCE", "name": "舞蹈" },
+      { "id": "SCENE_ACROBATICS", "name": "百戏" },
+      { "id": "SCENE_VIEWING", "name": "观赏/听琴" },
+      { "id": "SCENE_GAME", "name": "博弈" }
+    ]},
+    { "id": "SCENE_TRAVEL", "name": "出行仪仗", "children": [
+      { "id": "SCENE_PROCESSION", "name": "仪仗行进" },
+      { "id": "SCENE_CART_TRAVEL", "name": "车马出行" },
+      { "id": "SCENE_RIDING", "name": "骑行" },
+      { "id": "SCENE_OFFICIAL_TRAVEL", "name": "赴任/出行" }
+    ]},
+    { "id": "SCENE_LABOR", "name": "生产劳动", "children": [
+      { "id": "SCENE_FARMING", "name": "农耕" },
+      { "id": "SCENE_GRAZING", "name": "放牧" },
+      { "id": "SCENE_WATER", "name": "汲水" },
+      { "id": "SCENE_COOKING", "name": "厨炊" },
+      { "id": "SCENE_POUNDING", "name": "舂米" }
+    ]},
+    { "id": "SCENE_HUNTING", "name": "狩猎", "children": [
+      { "id": "SCENE_HUNT", "name": "狩猎活动" }
+    ]},
+    { "id": "SCENE_RITUAL", "name": "礼仪宗教", "children": [
+      { "id": "SCENE_WORSHIP", "name": "礼佛" },
+      { "id": "SCENE_SACRIFICE", "name": "祭祀" },
+      { "id": "SCENE_AUDIENCE", "name": "拜谒" }
+    ]},
+    { "id": "SCENE_HISTORY", "name": "历史故事", "children": [
+      { "id": "SCENE_FILIAL", "name": "孝行故事" },
+      { "id": "SCENE_STORY", "name": "历史叙事" }
+    ]},
+    { "id": "SCENE_MYTH", "name": "神话祥瑞", "children": [
+      { "id": "SCENE_AUSPICIOUS", "name": "祥瑞" },
+      { "id": "SCENE_ASCENSION", "name": "升仙/导引" }
+    ]},
+    { "id": "SCENE_CELESTIAL", "name": "天象生肖", "children": [
+      { "id": "SCENE_ZODIAC", "name": "生肖" },
+      { "id": "SCENE_ASTRAL", "name": "天象" }
+    ]},
+    { "id": "SCENE_NATURE", "name": "花鸟山水", "children": [
+      { "id": "SCENE_LANDSCAPE", "name": "山水" },
+      { "id": "SCENE_FLOWER_BIRD", "name": "花鸟" }
+    ]},
+    { "id": "SCENE_ARCH", "name": "建筑陈设", "children": [
+      { "id": "SCENE_BUILDING", "name": "建筑" },
+      { "id": "SCENE_FURNISHING", "name": "陈设" }
+    ]},
+    { "id": "SCENE_ORNAMENT", "name": "装饰图案", "children": [
+      { "id": "SCENE_PATTERN", "name": "纹样装饰" }
+    ]},
+    { "id": "SCENE_OTHER", "name": "其他", "children": [
+      { "id": "SCENE_OTHER_SUB", "name": "其他" }
+    ]}
+  ],
+  "events": ["舞蹈", "奏乐", "宴饮", "出行", "农耕", "狩猎", "礼佛"],
+  "relations": [
+    { "family": "SPATIAL", "predicate": "left_of", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "right_of", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "above", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "below", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "in_front_of", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "behind", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "beside", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "between", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "inside", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "contains", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "on", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "under", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "around", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "opposite_to", "sub": "ANY", "obj": "ANY" },
+    { "family": "SPATIAL", "predicate": "facing", "sub": "HUMAN", "obj": "HUMAN" },
+
+    { "family": "MEMBERSHIP", "predicate": "member_of", "sub": "ANY", "obj": "GROUP" },
+    { "family": "MEMBERSHIP", "predicate": "subgroup_of", "sub": "GROUP", "obj": "GROUP" },
+    { "family": "MEMBERSHIP", "predicate": "part_of", "sub": "ANY", "obj": "ANY" },
+    { "family": "MEMBERSHIP", "predicate": "located_in", "sub": "ANY", "obj": "REGION" },
+
+    { "family": "INTERACTION", "predicate": "hold", "sub": "HUMAN", "obj": "OBJECT" },
+    { "family": "INTERACTION", "predicate": "carry", "sub": "HUMAN", "obj": "OBJECT" },
+    { "family": "INTERACTION", "predicate": "ride", "sub": "HUMAN", "obj": "ANIMAL" },
+    { "family": "INTERACTION", "predicate": "lead", "sub": "HUMAN", "obj": "ANIMAL" },
+    { "family": "INTERACTION", "predicate": "pull", "sub": "HUMAN", "obj": "ANY" },
+    { "family": "INTERACTION", "predicate": "use", "sub": "HUMAN", "obj": "ANY" },
+    { "family": "INTERACTION", "predicate": "play", "sub": "HUMAN", "obj": "OBJECT" },
+    { "family": "INTERACTION", "predicate": "sit_on", "sub": "HUMAN", "obj": "FURNITURE" },
+    { "family": "INTERACTION", "predicate": "stand_on", "sub": "HUMAN", "obj": "FURNITURE" },
+
+    { "family": "NARRATIVE", "predicate": "serve", "sub": "HUMAN", "obj": "HUMAN" },
+    { "family": "NARRATIVE", "predicate": "attend", "sub": "HUMAN", "obj": "HUMAN" },
+    { "family": "NARRATIVE", "predicate": "guard", "sub": "HUMAN", "obj": "ANY" },
+    { "family": "NARRATIVE", "predicate": "follow", "sub": "ANY", "obj": "ANY" },
+    { "family": "NARRATIVE", "predicate": "observe", "sub": "HUMAN", "obj": "EVENT" },
+    { "family": "NARRATIVE", "predicate": "listen_to", "sub": "HUMAN", "obj": "EVENT" },
+    { "family": "NARRATIVE", "predicate": "worship", "sub": "HUMAN", "obj": "ANY" },
+    { "family": "NARRATIVE", "predicate": "guide", "sub": "ANY", "obj": "HUMAN" },
+    { "family": "NARRATIVE", "predicate": "chase", "sub": "HUMAN", "obj": "ANIMAL" },
+    { "family": "NARRATIVE", "predicate": "accompany", "sub": "ANY", "obj": "ANY" },
+    { "family": "NARRATIVE", "predicate": "observer_of", "sub": "GROUP", "obj": "EVENT" },
+    { "family": "NARRATIVE", "predicate": "performer_of", "sub": "GROUP", "obj": "EVENT" },
+
+    { "family": "TEXT", "predicate": "identifies", "sub": "INSCRIPTION", "obj": "ANY" },
+    { "family": "TEXT", "predicate": "labels", "sub": "INSCRIPTION", "obj": "ANY" },
+    { "family": "TEXT", "predicate": "names", "sub": "INSCRIPTION", "obj": "ANY" }
+  ]
 }
