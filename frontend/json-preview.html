@@ -1,15 +1,49 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · JSON预览</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「JSON预览」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>入库JSON预览 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="json-preview">
+
+<div class="page-head"><div><h1>入库前 JSON 预览</h1><p>当前角色提交前必须预览最终结构 JSON，并通过 Schema/QC 校验。</p></div><div class="actions"><a class="btn" href="review.html">返回修改</a><button class="btn" id="formatBtn">格式化 JSON</button><button class="btn primary" id="commitBtn">提交当前阶段</button></div></div>
+<div class="preview-banner"><strong>预览模式：</strong>当前内容尚未写入 Reviewed 版本。确认写入后，系统创建新的 immutable annotation_version，并保留 AI Candidate 与审核动作日志。</div>
+<div class="json-layout">
+<div class="card card-pad"><h2 class="section-title">Annotation JSON</h2><textarea id="jsonBox" class="json-editor" spellcheck="false"></textarea></div>
+<div class="mobile-stack">
+<div class="card card-pad"><h2 class="section-title">校验结果</h2><div id="schemaStatus" class="schema-status"></div></div>
+<div class="card card-pad" style="margin-top:14px"><h2 class="section-title">入库摘要</h2><div id="summary" class="kv"></div></div>
+<div class="card card-pad" style="margin-top:14px"><h2 class="section-title">版本信息</h2><div class="field"><label>目标版本类型</label><select class="select" style="width:100%"><option>reviewed</option></select></div><div class="field"><label>审核说明</label><textarea class="input" style="width:100%;height:90px" placeholder="可选"></textarea></div></div>
+</div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>setTimeout(initPreview,0));
+function initPreview(){const role=getRole(),btn=document.getElementById('commitBtn');
+ if(role==='reviewer')btn.textContent='提交给专家审核员';
+ else if(role==='expert')btn.textContent='提交给管理员验收';
+ else if(role==='admin')btn.textContent='验收并生成 Approved';
+ else {btn.textContent='只读';btn.classList.add('disabled')}
+ const box=document.getElementById('jsonBox');box.value=JSON.stringify(normalizeReviewDraftV7(),null,2);validate();box.addEventListener('input',validate);document.getElementById('formatBtn').addEventListener('click',()=>{try{box.value=JSON.stringify(JSON.parse(box.value),null,2);validate();toast('JSON 已格式化')}catch(e){toast('JSON 语法错误，无法格式化')}});document.getElementById('commitBtn').addEventListener('click',()=>{let data;try{data=JSON.parse(box.value)}catch(e){toast('JSON 语法错误，不能入库');return}const errs=validate();if(errs>0){toast('存在阻断型错误，不能入库');return}saveReviewDraft(data);const role=getRole(),tasks=getWorkflowTasks(),task=currentTask(),idx=tasks.findIndex(t=>t.id===task.id);
+let msg='',next='',toastMsg='';
+if(role==='reviewer'){msg='确认提交审核员结果并转交专家审核员？';next='EXPERT_REVIEW';toastMsg='审核结果已提交，任务已进入专家复核';}
+else if(role==='expert'){msg='确认专家复核完成并转交管理员验收？';next='ADMIN_ACCEPTANCE';toastMsg='专家复核已提交，等待管理员验收';}
+else if(role==='admin'){msg='确认管理员验收通过并生成 Approved 正式版本？';next='APPROVED';toastMsg='管理员已验收，Approved 版本已生成';}
+else{toast('只读角色不能提交');return}
+if(confirm(msg)){if(idx>=0){tasks[idx].status=next;saveWorkflowTasks(tasks)};saveReviewDraft(data);toast(toastMsg);setTimeout(()=>location.href=role==='reviewer'?'my-tasks.html':role==='expert'?'expert.html':'index.html',700)}})}
+function validate(){const box=document.getElementById('jsonBox'),status=document.getElementById('schemaStatus'),sum=document.getElementById('summary');let d,rows=[],blocking=0;try{d=JSON.parse(box.value);rows.push(['green','JSON_SYNTAX','JSON 语法有效'])}catch(e){rows.push(['red','JSON_SYNTAX','JSON 无法解析：'+e.message]);blocking++;status.innerHTML=render(rows);return blocking}
+ if(!d.sample?.mural_id){rows.push(['red','MURAL_ID_REQUIRED','缺少 sample.mural_id']);blocking++}else rows.push(['green','MURAL_ID_REQUIRED','壁画 ID 已提供']);
+ const ids=new Set((d.entities||[]).map(e=>e.id));let badRel=(d.relations||[]).filter(r=>!ids.has(r.subject)||(!ids.has(r.object)&&!String(r.object).startsWith('EV')));if(badRel.length){rows.push(['red','QC_REF_NOT_FOUND',badRel.length+' 条关系引用不存在实体']);blocking++}else rows.push(['green','QC_REF_NOT_FOUND','关系引用有效']);
+ let badBBox=(d.entities||[]).filter(e=>e.bbox && (e.bbox.length!==4||e.bbox.some(v=>typeof v!=='number'||v<0||v>1000)||e.bbox[0]>=e.bbox[2]||e.bbox[1]>=e.bbox[3]));if(badBBox.length){rows.push(['red','QC_BBOX_INVALID',badBBox.length+' 个 BBox 非法']);blocking++}else rows.push(['green','QC_BBOX_INVALID','BBox 合法']);
+ rows.push(['orange','CERTAINTY_CHECK','请确认 probable/possible/unknown 均未被 AI confidence 自动提升']);
+ const sceneRows=d.scene?.annotations||[];if(!sceneRows.length){rows.push(['orange','SCENE_EMPTY','当前没有 Scene 层级标签'])}else if(sceneRows.some(s=>!s.level1||!s.level2)){rows.push(['red','SCENE_HIERARCHY_INVALID','Scene 必须同时包含一级和二级场景']);blocking++}else rows.push(['green','SCENE_HIERARCHY_VALID','Scene 一级/二级层级完整']);
+ const relIds=new Set((d.entities||[]).map(e=>e.id));try{const nd=getNarrativeDemo();nd.groups.forEach(g=>relIds.add(g.id));nd.events.forEach(e=>relIds.add(e.id))}catch(e){}
+ const badRelations=(d.relations||[]).filter(r=>!r.subject||!r.predicate||!r.object||!relIds.has(r.subject)||!relIds.has(r.object));if(badRelations.length){rows.push(['red','RELATION_INVALID',badRelations.length+' 条 Relation 的节点引用或谓词无效']);blocking++}else rows.push(['green','RELATION_VALID','Relation 引用与谓词完整']);
+
+ status.innerHTML=render(rows);sum.innerHTML=`<div>壁画ID</div><div>${d.sample?.mural_id||'—'}</div><div>实体</div><div>${(d.entities||[]).length}</div><div>Group</div><div>${(d.groups||[]).length}</div><div>Event</div><div>${(d.events||[]).length}</div><div>Relation</div><div>${(d.relations||[]).length}</div><div>阻断错误</div><div>${blocking}</div>`;document.getElementById('commitBtn').classList.toggle('disabled',blocking>0);return blocking}
+function render(rows){return rows.map(([c,t,d])=>`<div class="schema-row"><div class="t"><span class="badge ${c}">${c==='red'?'BLOCKING':c==='orange'?'WARNING':'PASS'}</span> ${t}</div><div class="d">${d}</div></div>`).join('')}
+</script>
+
+</body></html>

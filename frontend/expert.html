@@ -1,15 +1,21 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 专家审核</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「专家审核」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>专家任务 - 壁画结构化语义标注系统</title><link rel="stylesheet" href="assets/shared.css"></head><body data-page="expert">
+<div class="page-head"><div><h1>专家任务</h1><p>仅显示分配给当前专家审核员的任务。审核员提交后自动进入这里。</p></div></div>
+<div class="grid cols-4">
+  <div class="card metric"><div class="label">待专家复核</div><div class="value" id="eWait">0</div><div class="sub">EXPERT_REVIEW</div></div>
+  <div class="card metric"><div class="label">已提交管理员</div><div class="value" id="eDone">0</div><div class="sub">ADMIN_ACCEPTANCE / APPROVED</div></div>
+  <div class="card metric"><div class="label">高优先级</div><div class="value" id="eHigh">0</div><div class="sub">需优先处理</div></div>
+  <div class="card metric"><div class="label">当前专家</div><div class="value" style="font-size:18px" id="eUser">expert_01</div><div class="sub">专家审核员</div></div>
+</div>
+<div class="card card-pad" style="margin-top:14px"><h2 class="section-title">分配给我的专家复核</h2><div id="expertTaskList"></div></div>
+<div id="toast" class="toast"></div><script src="assets/shared.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded",()=>setTimeout(renderExpertTasks,0));
+function renderExpertTasks(){
+ const user=currentUser(),tasks=getWorkflowTasks().filter(t=>t.expert===user),root=document.getElementById("expertTaskList");
+ document.getElementById("eUser").textContent=user;document.getElementById("eWait").textContent=tasks.filter(t=>t.status==="EXPERT_REVIEW").length;document.getElementById("eDone").textContent=tasks.filter(t=>["ADMIN_ACCEPTANCE","APPROVED"].includes(t.status)).length;document.getElementById("eHigh").textContent=tasks.filter(t=>t.priority==="高"&&t.status==="EXPERT_REVIEW").length;
+ root.innerHTML=tasks.map(t=>`<div class="task-card"><div class="row"><div><div class="title">${t.id} · ${t.name}</div><div class="meta">审核员 ${t.reviewer} · ${t.sample_count} 条 · 截止 ${t.due}</div></div><div class="spacer"></div><span class="badge ${t.status==="EXPERT_REVIEW"?'orange':'green'}">${taskStatusLabel(t.status)}</span></div><div class="row" style="margin-top:10px"><div class="task-progress"><span class="done">AI</span><span class="done">审核员</span><span class="${t.status==='EXPERT_REVIEW'?'active':'done'}">专家</span><span class="${t.status==='ADMIN_ACCEPTANCE'||t.status==='APPROVED'?'active':''}">管理员</span></div><div class="spacer"></div>${t.status==="EXPERT_REVIEW"?`<button class="btn small primary" onclick="openExpertTask('${t.id}')">开始复核</button>`:'<span class="badge green">已提交</span>'}</div></div>`).join("")||'<div class="panel-empty">当前没有专家任务</div>'
+}
+function openExpertTask(id){setActiveTask(id);location.href="review.html"}
+</script>
+</body></html>

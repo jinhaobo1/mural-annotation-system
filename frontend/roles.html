@@ -1,15 +1,88 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 用户与角色</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「用户与角色」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>用户与角色 - 壁画结构化语义标注系统</title><link rel="stylesheet" href="assets/shared.css"></head><body data-page="roles">
+<div class="page-head">
+  <div><h1>用户与角色</h1><p>统一管理系统用户、角色以及角色权限。</p></div>
+</div>
+
+<div class="manage-tabs">
+  <button class="manage-tab active" data-mtab="users">用户管理</button>
+  <button class="manage-tab" data-mtab="roles">角色管理</button>
+</div>
+
+<section class="manage-panel active" data-mpanel="users">
+  <div class="card card-pad">
+    <div class="row"><h2 class="section-title">用户管理</h2><div class="spacer"></div><button class="btn primary" id="addUserBtn">＋新增用户</button></div>
+    <div class="user-filter"><input id="userSearch" class="input search" placeholder="搜索用户名 / 姓名"><select id="userRoleFilter" class="select"><option value="">全部角色</option><option value="admin">管理员</option><option value="reviewer">标注审核员</option><option value="expert">专家审核员</option><option value="researcher">只读研究员</option></select><select id="userStatusFilter" class="select"><option value="">全部状态</option><option value="active">active</option><option value="disabled">disabled</option></select></div>
+    <div class="table-wrap"><table class="user-table"><thead><tr><th>用户</th><th>用户名</th><th>角色</th><th>状态</th><th>当前任务</th><th>操作</th></tr></thead><tbody id="userRows"></tbody></table></div>
+  </div>
+</section>
+
+<section class="manage-panel" data-mpanel="roles">
+  <div class="grid cols-2">
+    <div class="card card-pad">
+      <div class="row"><h2 class="section-title">角色列表</h2><div class="spacer"></div><button class="btn primary" id="addRoleBtn">＋新增角色</button></div>
+      <div id="roleList"></div>
+    </div>
+    <div class="card card-pad">
+      <h2 class="section-title">角色权限</h2>
+      <div id="roleEditor"><div class="panel-empty">选择左侧角色进行编辑</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-bg" id="userModal"><div class="modal">
+  <div class="modal-head"><strong id="userModalTitle">新增用户</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('userModal')">×</button></div>
+  <div class="modal-body"><input id="editUserId" type="hidden">
+    <div class="field-grid"><div class="field"><label>姓名 *</label><input id="uName" class="input" style="width:100%"></div><div class="field"><label>用户名 *</label><input id="uUsername" class="input" style="width:100%"></div></div>
+    <div class="field-grid"><div class="field"><label>角色 *</label><select id="uRole" class="select" style="width:100%"></select></div><div class="field"><label>状态</label><select id="uStatus" class="select" style="width:100%"><option>active</option><option>disabled</option></select></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" onclick="closeModal('userModal')">取消</button><button class="btn primary" id="saveUserBtn">保存用户</button></div>
+</div></div>
+
+<div class="modal-bg" id="roleModal"><div class="modal">
+  <div class="modal-head"><strong>新增角色</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('roleModal')">×</button></div>
+  <div class="modal-body">
+    <div class="field-grid"><div class="field"><label>角色名称 *</label><input id="newRoleName" class="input" style="width:100%"></div><div class="field"><label>角色代码 *</label><input id="newRoleCode" class="input" style="width:100%" placeholder="如 senior_reviewer"></div></div>
+    <div class="field"><label>说明</label><textarea id="newRoleDesc" class="input" style="width:100%;height:76px"></textarea></div>
+    <div class="field"><label>权限</label><div id="newRolePerms" class="checkbox-grid"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" onclick="closeModal('roleModal')">取消</button><button class="btn primary" id="saveRoleBtn">保存角色</button></div>
+</div></div>
+<div id="toast" class="toast"></div><script src="assets/shared.js"></script>
+<script>
+const allPermissions=[
+ ["project.manage","项目管理"],["sample.manage","壁画数据管理"],["ai.manage","AI任务管理"],["task.assign","任务分配"],
+ ["workflow.manage","工作流管理"],["annotation.review","标注审核"],["expert.mine","专家复核"],["approve.final","最终验收"],
+ ["taxonomy.manage","标注体系管理"],["taxonomy.read","标注体系查看"],["qc.manage","质检规则管理"],["user.manage","用户管理"],
+ ["role.manage","角色管理"],["version.read","版本查看"],["export.approved","Approved导出"],["export.all","全部数据导出"]
+];
+let selectedRoleCode=null;
+document.addEventListener("DOMContentLoaded",()=>setTimeout(initUserRole,0));
+function initUserRole(){
+ document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-mtab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll("[data-mpanel]").forEach(x=>x.classList.toggle("active",x.dataset.mpanel===b.dataset.mtab))});
+ document.getElementById("addUserBtn").onclick=()=>openUser();
+ document.getElementById("saveUserBtn").onclick=saveUser;
+ document.getElementById("addRoleBtn").onclick=openNewRole;
+ document.getElementById("saveRoleBtn").onclick=saveNewRole;
+ document.getElementById("userSearch").oninput=renderUsers;document.getElementById("userRoleFilter").onchange=renderUsers;document.getElementById("userStatusFilter").onchange=renderUsers;
+ renderUsers();renderRoles();buildRoleModalPerms();
+}
+function roleName(code){return getRoles().find(r=>r.code===code)?.name||code}
+function renderUsers(){
+ const q=document.getElementById("userSearch").value.trim().toLowerCase(),rf=document.getElementById("userRoleFilter").value,sf=document.getElementById("userStatusFilter").value,tasks=getWorkflowTasks(),root=document.getElementById("userRows");
+ const users=getUsers().filter(u=>(!q||`${u.username} ${u.name}`.toLowerCase().includes(q))&&(!rf||u.role===rf)&&(!sf||u.status===sf));
+ root.innerHTML=users.map(u=>{const count=tasks.filter(t=>[t.reviewer,t.expert].includes(u.username)&&!["APPROVED"].includes(t.status)).length;return `<tr><td><div class="row"><div class="avatar">${u.name.slice(0,1)}</div><strong>${u.name}</strong></div></td><td>${u.username}</td><td><span class="badge blue">${roleName(u.role)}</span></td><td><span class="user-status ${u.status==='disabled'?'disabled':''}">${u.status}</span></td><td>${count}</td><td><button class="btn small" onclick="editUser('${u.id}')">编辑</button> <button class="btn small" onclick="toggleUser('${u.id}')">${u.status==='active'?'停用':'启用'}</button></td></tr>`}).join("")
+}
+function fillRoleSelect(sel){sel.innerHTML=getRoles().map(r=>`<option value="${r.code}">${r.name}（${r.code}）</option>`).join("")}
+function openUser(){document.getElementById("userModalTitle").textContent="新增用户";document.getElementById("editUserId").value="";document.getElementById("uName").value="";document.getElementById("uUsername").value="";fillRoleSelect(document.getElementById("uRole"));document.getElementById("uStatus").value="active";openModal("userModal")}
+function editUser(id){const u=getUsers().find(x=>x.id===id);if(!u)return;document.getElementById("userModalTitle").textContent="编辑用户";document.getElementById("editUserId").value=id;document.getElementById("uName").value=u.name;document.getElementById("uUsername").value=u.username;fillRoleSelect(document.getElementById("uRole"));document.getElementById("uRole").value=u.role;document.getElementById("uStatus").value=u.status;openModal("userModal")}
+function saveUser(){const users=getUsers(),id=document.getElementById("editUserId").value,name=document.getElementById("uName").value.trim(),username=document.getElementById("uUsername").value.trim(),role=document.getElementById("uRole").value,status=document.getElementById("uStatus").value;if(!name||!username){toast("姓名和用户名必填");return}let u=users.find(x=>x.id===id);if(!u){if(users.some(x=>x.username===username)){toast("用户名已存在");return}u={id:"U"+String(users.length+1).padStart(3,"0")};users.push(u)}u.name=name;u.username=username;u.role=role;u.status=status;saveUsers(users);closeModal("userModal");renderUsers();toast("用户已保存")}
+function toggleUser(id){const users=getUsers(),u=users.find(x=>x.id===id);if(!u)return;u.status=u.status==="active"?"disabled":"active";saveUsers(users);renderUsers();toast("用户状态已更新")}
+function renderRoles(){const root=document.getElementById("roleList"),roles=getRoles();root.innerHTML=roles.map(r=>`<div class="role-card ${r.code===selectedRoleCode?'active':''}" data-role="${r.code}"><div class="row"><div><div class="role-name">${r.name}</div><div class="role-code">${r.code}${r.system?' · 系统角色':''}</div></div><div class="spacer"></div><span class="badge">${getUsers().filter(u=>u.role===r.code).length} 用户</span></div><div style="font-size:10px;color:#667085;margin-top:6px">${r.description||''}</div><div class="permission-list">${r.permissions.slice(0,5).map(p=>`<span class="permission-pill">${p}</span>`).join("")}${r.permissions.length>5?`<span class="permission-pill">+${r.permissions.length-5}</span>`:''}</div></div>`).join("");root.querySelectorAll("[data-role]").forEach(x=>x.onclick=()=>{selectedRoleCode=x.dataset.role;renderRoles();renderRoleEditor()})}
+function renderRoleEditor(){const r=getRoles().find(x=>x.code===selectedRoleCode),root=document.getElementById("roleEditor");if(!r){root.innerHTML='<div class="panel-empty">选择左侧角色进行编辑</div>';return}root.innerHTML=`<div class="field"><label>角色名称</label><input id="erName" class="input" value="${r.name}" style="width:100%" ${r.system?'':' '}></div><div class="field"><label>说明</label><textarea id="erDesc" class="input" style="width:100%;height:72px">${r.description||''}</textarea></div><div class="field"><label>权限</label><div class="checkbox-grid">${allPermissions.map(([code,label])=>`<label><input type="checkbox" value="${code}" ${r.permissions.includes(code)?'checked':''}> ${label}</label>`).join("")}</div></div><div class="row"><span class="badge">${r.system?'系统角色':'自定义角色'}</span><div class="spacer"></div>${!r.system?`<button class="btn danger" id="delRole">删除角色</button>`:''}<button class="btn primary" id="saveRoleEdit">保存修改</button></div>`;document.getElementById("saveRoleEdit").onclick=()=>{const roles=getRoles(),x=roles.find(z=>z.code===r.code);x.name=document.getElementById("erName").value.trim();x.description=document.getElementById("erDesc").value.trim();x.permissions=[...root.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value);saveRoles(roles);renderRoles();toast("角色权限已保存")};const del=document.getElementById("delRole");if(del)del.onclick=()=>deleteRole(r.code)}
+function buildRoleModalPerms(){document.getElementById("newRolePerms").innerHTML=allPermissions.map(([code,label])=>`<label><input type="checkbox" value="${code}"> ${label}</label>`).join("")}
+function openNewRole(){document.getElementById("newRoleName").value="";document.getElementById("newRoleCode").value="";document.getElementById("newRoleDesc").value="";document.querySelectorAll("#newRolePerms input").forEach(x=>x.checked=false);openModal("roleModal")}
+function saveNewRole(){const name=document.getElementById("newRoleName").value.trim(),code=document.getElementById("newRoleCode").value.trim(),desc=document.getElementById("newRoleDesc").value.trim();if(!name||!code){toast("角色名称和代码必填");return}const roles=getRoles();if(roles.some(r=>r.code===code)){toast("角色代码已存在");return}roles.push({code,name,description:desc,permissions:[...document.querySelectorAll("#newRolePerms input:checked")].map(x=>x.value),system:false});saveRoles(roles);closeModal("roleModal");renderRoles();renderUsers();toast("新角色已创建")}
+function deleteRole(code){if(getUsers().some(u=>u.role===code)){toast("该角色仍有用户，不能删除");return}if(!confirm("确认删除角色 "+code+"？"))return;saveRoles(getRoles().filter(r=>r.code!==code));selectedRoleCode=null;renderRoles();renderRoleEditor();toast("角色已删除")}
+</script>
+</body></html>

@@ -1,15 +1,30 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 壁画详情</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「壁画详情」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>壁画详情 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="sample-detail">
+
+<div class="page-head"><div><h1 id="title">壁画详情</h1><p>壁画基础信息 + 图片 + Caption + 当前标注版本。</p></div><div class="actions"><a class="btn" href="versions.html">版本历史</a><a class="btn" href="ai-run.html">AI 自动标注</a><a id="taskEntryBtn" class="btn primary" href="my-tasks.html">从任务进入处理</a></div></div>
+<div class="meta-strip" id="metaStrip"></div>
+<div class="grid cols-2">
+<div class="card card-pad"><img src="assets/sample_mural.png" alt="壁画图片" style="max-height:650px;max-width:100%;display:block;margin:auto;border-radius:8px"><h3 class="sub-title">Caption</h3><div id="caption" class="callout"></div></div>
+<div class="card card-pad"><h2 class="section-title">数据状态</h2><div class="kv"><div>workflow_status</div><div><span class="badge blue">AI_READY</span></div><div>view_type</div><div>full_scene</div><div>source_group_id</div><div>SCENE-02315</div><div>candidate</div><div>v3</div><div>reviewed</div><div>—</div><div>approved</div><div>—</div></div><hr><h2 class="section-title">Candidate 概要</h2><div class="chip-list"><span class="chip">Scene 1</span><span class="chip">Entity 2</span><span class="chip">Attribute 6</span><span class="chip">State 0</span><span class="chip">Action 3</span><span class="chip">Relation 1</span></div><hr><button class="btn" onclick="location.href='json-preview.html'">查看当前 JSON</button></div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{
+ const m=getSampleMeta();document.getElementById('title').textContent=m.mural_id+' · '+m.name;document.getElementById('caption').textContent=m.caption;
+ const role=getRole(),btn=document.getElementById('taskEntryBtn');
+ if(role==='reviewer'){btn.href='my-tasks.html';btn.textContent='返回我的任务'}
+ else if(role==='expert'){btn.href='expert.html';btn.textContent='返回专家任务'}
+ else if(role==='admin'){btn.href='task-assignment.html';btn.textContent='返回任务分配'}
+ else {btn.style.display='none'};document.getElementById('metaStrip').innerHTML=[['壁画ID',m.mural_id],['名称',m.name],['图片',m.image]].map(x=>`<div class="meta-box"><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join('')
+},0))
+</script>
+
+</body></html>

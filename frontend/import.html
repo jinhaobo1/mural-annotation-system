@@ -1,15 +1,33 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 数据导入</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「数据导入」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>导入壁画样本 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="import">
+
+<div class="page-head"><div><h1>导入壁画样本</h1><p>每条样本的核心输入固定为：壁画 ID、名称、壁画图片、Caption。</p></div><a class="btn" href="samples.html">返回样本管理</a></div>
+<div class="grid cols-2">
+<div class="card card-pad"><h2 class="section-title">单条壁画信息</h2>
+<form id="metaForm">
+<div class="field"><label>壁画 ID *</label><input id="muralId" class="input" value="MURAL-02315" style="width:100%"><div class="hint">项目内唯一；建议使用稳定业务 ID，不使用数据库自增 ID 作为外部编号。</div></div>
+</div>
+<div class="field"><label>壁画名称 *</label><input id="muralName" class="input" value="人物图" style="width:100%"></div>
+<div class="field"><label>壁画图片 *</label><input id="muralImage" class="input" type="file" accept="image/*" style="width:100%"><div class="hint">原型使用 assets/sample_mural.png；生产系统上传后保存 asset_id / object_key。</div></div>
+<div class="field"><label>Caption *</label><textarea id="muralCaption" class="input" style="width:100%;height:150px">绘一男一女。左侧男子头戴尖山小冠，身穿淡土红色交社衫，拱手，似施礼。右侧女子头梳倭堕髻，身穿淡土红色交社百戏衫，系淡土红色曳地长裙。腹部隆起，左手置腹前，右手指点。</textarea></div>
+<div class="row"><label><input id="autoRun" type="checkbox"> 保存后立即创建 AI 自动标注任务</label><div class="spacer"></div><button type="submit" class="btn primary">保存壁画样本</button></div>
+</form></div>
+<div class="card card-pad"><h2 class="section-title">批量导入</h2><div class="field"><label>元数据文件</label><input class="input" type="file" style="width:100%"></div><div class="field"><label>要求字段</label><div class="chip-list"><span class="chip">mural_id</span><span class="chip">name</span><span class="chip">image_path / image_key</span><span class="chip">caption</span></div></div><div class="callout">批量导入只创建 Raw Revision。若项目开启「导入后自动运行 AI」，系统在导入成功后异步创建 Batch；否则由用户后续手动点击单张或批量 AI。</div><button class="btn" style="margin-top:12px" onclick="toast('预检完成：示例卷 8 条有效，0 条图片路径需要修复')">预检文件</button></div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{
+ const f=document.getElementById('metaForm'); if(!f)return;
+ f.addEventListener('submit',e=>{e.preventDefault();const meta={mural_id:document.getElementById('muralId').value.trim(),name:document.getElementById('muralName').value.trim(),image:'assets/sample_mural.png',caption:document.getElementById('muralCaption').value.trim()};if(!meta.mural_id||!meta.name||!meta.caption){toast('请填写全部必填字段');return}setSampleMeta(meta);toast(document.getElementById('autoRun').checked?'样本已保存，并已创建 AI Run':'样本已保存');setTimeout(()=>location.href=document.getElementById('autoRun').checked?'ai-run.html':'sample-detail.html',700)})
+},0))
+</script>
+
+</body></html>

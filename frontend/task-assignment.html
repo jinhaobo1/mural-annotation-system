@@ -1,15 +1,127 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 任务分配</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「任务分配」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>任务分配 - 壁画结构化语义标注系统</title><link rel="stylesheet" href="assets/shared.css"></head><body data-page="task-assignment">
+<div class="page-head">
+  <div><h1>任务分配</h1><p>从 AI 已完成的壁画中勾选需要分配的样本，再指定审核员和专家审核员。</p></div>
+  <a class="btn" href="workflow.html">查看工作流</a>
+</div>
+
+<div class="assign-layout">
+  <div class="card card-pad">
+    <div class="row"><h2 class="section-title">选择壁画</h2><div class="spacer"></div><span class="badge blue">仅显示 AI_READY</span></div>
+    <div class="filters">
+      <input id="muralSearch" class="input search" placeholder="搜索壁画 ID / 名称 / Caption">
+      <select id="riskFilter" class="select"><option value="">全部风险</option><option value="high">高风险 ≥ 70</option><option value="medium">中风险 40–69</option><option value="low">低风险 &lt; 40</option></select>
+      <button class="btn" id="clearSelection">清空选择</button>
+    </div>
+    <div class="selection-bar">
+      <label><input id="selectVisible" type="checkbox"> 全选当前筛选结果</label>
+      <span>已选择 <span id="selectedCount" class="selection-count">0</span> 幅壁画</span>
+      <div class="spacer"></div>
+      <span id="riskSummary" style="font-size:11px;color:#667085"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:42px">选择</th><th>壁画</th><th>Caption 摘要</th><th>AI 风险</th><th>状态</th></tr></thead>
+        <tbody id="muralRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-pad assign-panel">
+    <h2 class="section-title">分配设置</h2>
+    <div class="field"><label>任务名称 *</label><input id="taskName" class="input" value="AI 标注结果审核" style="width:100%"></div>
+    <div class="field"><label>审核员 *</label><select id="reviewerSelect" class="select" style="width:100%"></select><div class="hint">只显示状态为 active 的“标注审核员”用户。</div></div>
+    <div class="field"><label>专家审核员 *</label><select id="expertSelect" class="select" style="width:100%"></select><div class="hint">审核员提交后自动流转到这里指定的专家。</div></div>
+    <div class="field-grid">
+      <div class="field"><label>优先级</label><select id="prioritySelect" class="select" style="width:100%"><option>高</option><option selected>普通</option><option>低</option></select></div>
+      <div class="field"><label>截止日期</label><input id="dueInput" class="input" type="date" value="2026-10-05" style="width:100%"></div>
+    </div>
+    <hr>
+    <div class="kv">
+      <div>选择数量</div><div id="assignCount">0</div>
+      <div>审核员</div><div id="assignReviewer">—</div>
+      <div>专家审核员</div><div id="assignExpert">—</div>
+      <div>任务流转</div><div>审核员 → 专家审核员 → 管理员</div>
+    </div>
+    <button id="assignBtn" class="btn primary" style="width:100%;margin-top:14px">创建并分配任务</button>
+  </div>
+</div>
+
+<div class="card card-pad" style="margin-top:14px">
+  <div class="row"><h2 class="section-title">已分配任务</h2><div class="spacer"></div><select id="taskFilter" class="select"><option value="">全部状态</option><option>REVIEW_ASSIGNED</option><option>IN_REVIEW</option><option>EXPERT_REVIEW</option><option>ADMIN_ACCEPTANCE</option><option>APPROVED</option></select></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>任务</th><th>壁画数</th><th>审核员</th><th>专家审核员</th><th>截止</th><th>优先级</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="taskRows"></tbody>
+  </table></div>
+</div>
+<div id="toast" class="toast"></div><script src="assets/shared.js"></script>
+<script>
+let assignMurals=[];
+document.addEventListener("DOMContentLoaded",()=>setTimeout(initAssign,0));
+function initAssign(){
+  assignMurals=getAssignableMurals();
+  fillUserSelects();
+  renderMuralRows();
+  renderTasks();
+  document.getElementById("muralSearch").oninput=renderMuralRows;
+  document.getElementById("riskFilter").onchange=renderMuralRows;
+  document.getElementById("clearSelection").onclick=()=>{assignMurals.forEach(m=>m.selected=false);saveAssignableMurals(assignMurals);renderMuralRows()};
+  document.getElementById("selectVisible").onchange=e=>{visibleMurals().forEach(m=>m.selected=e.target.checked);saveAssignableMurals(assignMurals);renderMuralRows()};
+  document.getElementById("reviewerSelect").onchange=updateAssignmentSummary;
+  document.getElementById("expertSelect").onchange=updateAssignmentSummary;
+  document.getElementById("assignBtn").onclick=createAssignment;
+  document.getElementById("taskFilter").onchange=renderTasks;
+}
+function fillUserSelects(){
+ const rev=usersByRole("reviewer"),exp=usersByRole("expert");
+ const rs=document.getElementById("reviewerSelect"),es=document.getElementById("expertSelect");
+ rs.innerHTML=rev.map(u=>`<option value="${u.username}">${u.name}（${u.username}）</option>`).join("");
+ es.innerHTML=exp.map(u=>`<option value="${u.username}">${u.name}（${u.username}）</option>`).join("");
+ updateAssignmentSummary();
+}
+function visibleMurals(){
+ const q=document.getElementById("muralSearch").value.trim().toLowerCase(),rf=document.getElementById("riskFilter").value;
+ return assignMurals.filter(m=>{
+   const hit=!q||`${m.id} ${m.name} ${m.caption}`.toLowerCase().includes(q);
+   const risk=!rf||(rf==="high"&&m.risk>=70)||(rf==="medium"&&m.risk>=40&&m.risk<70)||(rf==="low"&&m.risk<40);
+   return hit&&risk
+ })
+}
+function renderMuralRows(){
+ const vis=visibleMurals(),root=document.getElementById("muralRows");
+ root.innerHTML=vis.map(m=>`<tr class="${m.selected?'mural-row selected':'mural-row'}"><td><input type="checkbox" data-mid="${m.id}" ${m.selected?'checked':''}></td><td><strong>${m.id}</strong><div style="font-size:10px;color:#667085">${m.name}</div></td><td style="max-width:360px">${m.caption}</td><td><span class="badge ${m.risk>=70?'orange':m.risk<40?'green':'blue'}">${m.risk}</span></td><td><span class="badge blue">${m.status}</span></td></tr>`).join("");
+ root.querySelectorAll("[data-mid]").forEach(c=>c.onchange=()=>{const m=assignMurals.find(x=>x.id===c.dataset.mid);m.selected=c.checked;saveAssignableMurals(assignMurals);renderMuralRows()});
+ const selected=assignMurals.filter(m=>m.selected),high=selected.filter(m=>m.risk>=70).length;
+ document.getElementById("selectedCount").textContent=selected.length;document.getElementById("assignCount").textContent=selected.length+" 幅";document.getElementById("riskSummary").textContent=selected.length?`其中高风险 ${high} 幅`:"";
+ const all=vis.length>0&&vis.every(m=>m.selected);document.getElementById("selectVisible").checked=all;
+ updateAssignmentSummary();
+}
+function updateAssignmentSummary(){
+ const r=document.getElementById("reviewerSelect"),e=document.getElementById("expertSelect");
+ document.getElementById("assignReviewer").textContent=r.value?userLabel(r.value):"—";document.getElementById("assignExpert").textContent=e.value?userLabel(e.value):"—";
+ document.getElementById("assignBtn").disabled=!assignMurals.some(m=>m.selected)||!r.value||!e.value;
+}
+function createAssignment(){
+ const selected=assignMurals.filter(m=>m.selected);if(!selected.length){toast("请至少选择一幅壁画");return}
+ const reviewer=document.getElementById("reviewerSelect").value,expert=document.getElementById("expertSelect").value;if(!reviewer||!expert){toast("请选择审核员和专家审核员");return}
+ const tasks=getWorkflowTasks();let n=tasks.length+1,id="TASK-"+String(n).padStart(3,"0");
+ while(tasks.some(t=>t.id===id)){n++;id="TASK-"+String(n).padStart(3,"0")}
+ tasks.push({id,name:document.getElementById("taskName").value.trim()||"AI 标注结果审核",sample_ids:selected.map(m=>m.id),sample_count:selected.length,reviewer,expert,priority:document.getElementById("prioritySelect").value,due:document.getElementById("dueInput").value,status:"REVIEW_ASSIGNED",ai_status:"AI_READY",progress:0,created_by:currentUser()});
+ saveWorkflowTasks(tasks);
+ assignMurals.forEach(m=>{if(m.selected)m.selected=false});saveAssignableMurals(assignMurals);
+ renderMuralRows();renderTasks();toast(`${id} 已分配给 ${userLabel(reviewer)}`)
+}
+function renderTasks(){
+ const filter=document.getElementById("taskFilter").value,tasks=getWorkflowTasks().filter(t=>!filter||t.status===filter),root=document.getElementById("taskRows");
+ root.innerHTML=tasks.map(t=>`<tr><td><strong>${t.id}</strong><div style="font-size:10px;color:#667085">${t.name}</div></td><td>${t.sample_count}</td><td>${userLabel(t.reviewer)}</td><td>${userLabel(t.expert)}</td><td>${t.due}</td><td><span class="badge ${t.priority==='高'?'orange':''}">${t.priority}</span></td><td><span class="badge blue">${taskStatusLabel(t.status)}</span></td><td><button class="btn small" onclick="reassignTask('${t.id}')">调整人员</button> ${t.status==='ADMIN_ACCEPTANCE'?`<button class="btn small primary" onclick="acceptTask('${t.id}')">管理员验收</button>`:`<button class="btn small" onclick="openTask('${t.id}')">查看</button>`}</td></tr>`).join("")
+}
+function reassignTask(id){
+ const tasks=getWorkflowTasks(),t=tasks.find(x=>x.id===id);if(!t)return;
+ const rev=usersByRole("reviewer");const next=prompt("输入审核员用户名，可选："+rev.map(x=>x.username).join("、"),t.reviewer);
+ if(!next)return;if(!rev.some(x=>x.username===next)){toast("该用户不是可用的审核员");return}
+ t.reviewer=next;saveWorkflowTasks(tasks);renderTasks();toast("审核员已调整")
+}
+function openTask(id){setActiveTask(id);location.href="sample-detail.html"}
+function acceptTask(id){setActiveTask(id);location.href="review.html"}
+</script>
+</body></html>

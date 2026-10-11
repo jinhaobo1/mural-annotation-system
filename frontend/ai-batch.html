@@ -1,15 +1,17 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · AI批量任务</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「AI批量任务」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>批量AI自动标注 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="ai-batch">
+
+<div class="page-head"><div><h1>创建批量 AI 自动标注</h1><p>批次只负责聚合；每个 sample 创建独立 AI Run，单条失败不阻断整个 Batch。</p></div><a class="btn" href="ai-jobs.html">返回任务中心</a></div>
+<div class="grid cols-2"><div class="card card-pad"><h2 class="section-title">任务范围</h2><div class="field"><label>选择方式</label><select class="select" style="width:100%"><option>当前筛选结果</option><option>已勾选样本</option><option>全部 RAW_READY</option></select></div><div class="field"><label>预计命中</label><input class="input" value="8 条样本（示例卷）" readonly style="width:100%"></div><div class="field"><label>AI Config</label><select class="select" style="width:100%"><option>prod-2026-09</option><option>exp-2026-09-b</option></select></div><label><input type="checkbox" checked> 已有 Candidate 时跳过</label><br><label><input type="checkbox"> 允许 Approved 样本生成新 Candidate</label></div>
+<div class="card card-pad"><h2 class="section-title">执行策略</h2><div class="field"><label>优先级</label><select class="select" style="width:100%"><option>普通批量</option><option>低优先级</option></select></div><div class="field"><label>并发</label><input class="input" value="8" style="width:100%"></div><div class="callout">系统会跳过无图片、无 caption 或被策略禁止重跑的样本，并记录 SKIPPED 原因。</div></div></div>
+<div class="card card-pad" style="margin-top:14px"><div class="row"><div><strong>确认创建 Batch</strong><div style="color:#667085;font-size:12px">示例卷 8 条 · prod-2026-09 · 预计 7 queued / 1 skipped（人物图已有 Candidate v3）</div></div><div class="spacer"></div><button class="btn primary" onclick="confirmAction('BATCH-08 已创建','ai-jobs.html')">创建后台任务</button></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>

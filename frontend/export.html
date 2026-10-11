@@ -1,15 +1,20 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 数据导出</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「数据导出」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据导出 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="export">
+
+<div class="page-head"><div><h1>数据导出</h1><p>Gold / Reviewed / AI Pseudo / Feedback 严格分开，防止伪标签误作人工真值。</p></div></div>
+<div class="grid cols-4">
+<div class="card card-pad"><h2 class="section-title">Gold</h2><p style="font-size:12px;color:#667085">仅 Approved 版本。</p><button class="btn primary" onclick="toast('Gold 导出任务已创建')">创建导出</button></div>
+<div class="card card-pad"><h2 class="section-title">Reviewed Train</h2><p style="font-size:12px;color:#667085">人工审核完成数据。</p><button class="btn" onclick="toast('Reviewed 导出任务已创建')">创建导出</button></div>
+<div class="card card-pad"><h2 class="section-title">AI Pseudo</h2><p style="font-size:12px;color:#667085">仅 Candidate，用于伪标签实验。</p><button class="btn" onclick="toast('AI Pseudo 导出任务已创建')">创建导出</button></div>
+<div class="card card-pad"><h2 class="section-title">Feedback</h2><p style="font-size:12px;color:#667085">AI 原值 + 人工后值 + action。</p><button class="btn" onclick="toast('Feedback 导出任务已创建')">创建导出</button></div>
+</div><div class="card card-pad" style="margin-top:14px"><h2 class="section-title">格式与范围</h2><div class="field-grid"><div class="field"><label>格式</label><select class="select" style="width:100%"><option>Annotation JSON</option><option>JSONL</option><option>COCO扩展</option></select></div><div class="field"><label>Split</label><select class="select" style="width:100%"><option>all</option><option>train</option><option>val</option><option>test</option></select></div></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>

@@ -1,15 +1,52 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · AI配置</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「AI配置」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI配置管理 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="ai-config">
+
+<div class="page-head"><div><h1>AI 配置管理</h1><p>以流水线方式管理 S0–S7；点击任一 Stage 可视化编辑模型、Prompt、阈值、超时和重试策略。</p></div><div class="actions"><button class="btn" id="cloneBtn">复制为新配置</button><button class="btn" id="compareBtn">对比版本</button><button class="btn primary" id="publishBtn">发布配置</button></div></div>
+<div class="meta-strip"><div class="meta-box"><div class="k">当前生产版本</div><div class="v">prod-2026-09</div></div><div class="meta-box"><div class="k">Taxonomy</div><div class="v">v1.2-custom</div></div><div class="meta-box"><div class="k">本周 AI 接受率</div><div class="v">71.4%</div></div><div class="meta-box"><div class="k">P95 单样本耗时</div><div class="v">18.2 s</div></div></div>
+<div class="ai-visual">
+<div class="card card-pad"><div class="row"><h2 class="section-title">AI Pipeline</h2><div class="spacer"></div><span class="badge green">生产中</span></div><div class="ai-flow" id="aiFlow"></div></div>
+<div class="card card-pad ai-config-panel"><div class="row"><h2 class="section-title" id="stageTitle">S1 Caption 解析</h2><div class="spacer"></div><button class="btn small" id="testBtn">测试当前 Stage</button></div>
+<div id="stageEditor">
+<div class="field"><label>Stage 模型</label><div class="provider-cards" id="providerCards"><div class="provider active" data-provider="Internal-LLM"><strong>Internal LLM</strong><span>默认生产</span></div><div class="provider" data-provider="Vision-MLLM"><strong>Vision MLLM</strong><span>图文联合</span></div><div class="provider" data-provider="External API"><strong>External API</strong><span>需权限</span></div></div></div>
+<div class="field"><label>model_id</label><input id="modelId" class="input" value="LLM-Parser-v4" style="width:100%"></div>
+<div class="field"><label>Prompt 版本</label><div class="row"><select id="promptVer" class="select" style="flex:1"><option>caption-parse-v7</option><option>caption-parse-v6</option></select><button class="btn" id="editPromptBtn">编辑 Prompt</button></div></div>
+<div class="field"><label>置信度阈值</label><div class="range-row"><input id="threshold" type="range" min="0" max="1" step="0.01" value="0.72"><input id="thresholdNum" class="input" value="0.72"></div></div>
+<div class="field-grid"><div class="field"><label>Timeout (s)</label><input id="timeout" class="input" value="30" style="width:100%"></div><div class="field"><label>最大重试</label><input id="retry" class="input" value="3" style="width:100%"></div></div>
+<div class="row"><div><strong>启用该 Stage</strong><div style="font-size:10px;color:#667085">关闭后 Orchestrator 跳过本阶段</div></div><div class="spacer"></div><div id="stageSwitch" class="switch on"></div></div>
+<hr><h3 class="sub-title">测试结果</h3><div id="testResult" class="test-result">点击“测试当前 Stage”，系统将使用当前样本和草稿配置执行一次沙箱测试，不写入正式 Candidate。</div>
+</div></div>
+</div>
+<div class="grid cols-2" style="margin-top:14px"><div class="card card-pad"><h2 class="section-title">全局队列策略</h2><div class="field"><label>单张任务优先级</label><select class="select" style="width:100%"><option>高于批量任务</option></select></div><div class="field"><label>批量并发</label><input class="input" value="8" style="width:100%"></div><div class="field"><label>Provider 限流</label><input class="input" value="60 req/min" style="width:100%"></div></div><div class="card card-pad"><h2 class="section-title">数据安全策略</h2><div class="row" style="margin:10px 0"><div>允许外部 Provider<div style="font-size:10px;color:#667085">关闭后所有 Stage 必须使用内部模型</div></div><div class="spacer"></div><div class="switch"></div></div><div class="row" style="margin:10px 0"><div>Approved 可重新跑 AI<div style="font-size:10px;color:#667085">只生成新 Candidate，不覆盖 Approved</div></div><div class="spacer"></div><div class="switch on"></div></div></div></div>
+
+<div class="modal-bg" id="promptModal"><div class="modal"><div class="modal-head"><strong>Prompt 编辑器</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('promptModal')">×</button></div><div class="modal-body"><textarea id="promptText" class="input" style="width:100%;height:330px">你是壁画结构化语义解析器。请仅抽取 caption 明确支持的 Scene、Entity、Attribute、State、Action、Group、Event、Relation，并保留“似为/应为/可能”等 certainty。</textarea></div><div class="modal-foot"><button class="btn" onclick="closeModal('promptModal')">取消</button><button class="btn primary" onclick="closeModal('promptModal');toast('Prompt 草稿已保存')">保存 Prompt 草稿</button></div></div></div>
+<div class="modal-bg" id="compareModal"><div class="modal"><div class="modal-head"><strong>配置版本对比</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('compareModal')">×</button></div><div class="modal-body"><table><thead><tr><th>项</th><th>prod-2026-09</th><th>draft-2026-10</th></tr></thead><tbody><tr><td>S1 model</td><td>LLM-Parser-v4</td><td>LLM-Parser-v5</td></tr><tr><td>S2 threshold</td><td>0.45</td><td>0.50</td></tr><tr><td>S3 prompt</td><td>visual-discovery-v4</td><td>v5</td></tr></tbody></table></div></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+const cfgStages=[
+{id:'S0',name:'预处理',desc:'图片解码、hash、caption规范化',model:'preprocess-service',prompt:'—',threshold:1,timeout:10,retry:1},
+{id:'S1',name:'Caption解析',desc:'Scene / Entity / Group / Event / certainty',model:'LLM-Parser-v4',prompt:'caption-parse-v7',threshold:.72,timeout:30,retry:3},
+{id:'S2',name:'视觉 Grounding',desc:'文本实体 query → bbox / top-k',model:'Grounding-Model-v2',prompt:'grounding-query-v3',threshold:.45,timeout:25,retry:3},
+{id:'S3',name:'遗漏实体发现',desc:'image-only 补充重要视觉对象',model:'VLM-Discovery-v1',prompt:'visual-discovery-v4',threshold:.58,timeout:40,retry:2},
+{id:'S4',name:'属性/状态/动作',desc:'Entity-conditioned 多模态判断',model:'Mural-VLM-v3',prompt:'entity-facts-v5',threshold:.62,timeout:40,retry:2},
+{id:'S5',name:'Group / Event',desc:'群组、事件和角色结构',model:'Mural-VLM-v3',prompt:'group-event-v3',threshold:.60,timeout:45,retry:2},
+{id:'S6',name:'Relation',desc:'空间 / 交互 / 叙事关系',model:'Mural-VLM-v3',prompt:'relation-v4',threshold:.65,timeout:35,retry:2},
+{id:'S7',name:'QC / 风险',desc:'Schema、业务校验与风险评分',model:'qc-engine',prompt:'—',threshold:1,timeout:10,retry:1}
+];let active=1;
+document.addEventListener('DOMContentLoaded',()=>setTimeout(initCfg,0));
+function initCfg(){renderFlow();bindStage();document.getElementById('threshold').addEventListener('input',e=>document.getElementById('thresholdNum').value=e.target.value);document.getElementById('thresholdNum').addEventListener('change',e=>document.getElementById('threshold').value=Math.max(0,Math.min(1,Number(e.target.value)||0)));document.getElementById('editPromptBtn').addEventListener('click',()=>openModal('promptModal'));document.getElementById('testBtn').addEventListener('click',testStage);document.getElementById('cloneBtn').addEventListener('click',()=>toast('已复制为 draft-2026-10'));document.getElementById('compareBtn').addEventListener('click',()=>openModal('compareModal'));document.getElementById('publishBtn').addEventListener('click',()=>{if(confirm('发布后新 AI Run 将默认使用该配置，确认发布？'))toast('配置已发布为 prod-2026-10')});document.querySelectorAll('.provider').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('.provider').forEach(x=>x.classList.remove('active'));p.classList.add('active');toast('Provider 已切换为 '+p.dataset.provider)}))}
+function renderFlow(){const root=document.getElementById('aiFlow');root.innerHTML=cfgStages.map((s,i)=>`<div class="ai-step ${i===active?'active':''}" data-i="${i}"><span class="circle">${s.id}</span><div class="name">${s.name}</div><div class="desc">${s.desc}</div><div class="chips"><span class="badge">${s.model}</span>${s.prompt!=='—'?`<span class="badge blue">${s.prompt}</span>`:''}<span class="badge green">enabled</span></div></div>`).join('')}
+function bindStage(){document.querySelectorAll('.ai-step').forEach(x=>x.addEventListener('click',()=>{saveActive();active=Number(x.dataset.i);renderFlow();bindStage();loadActive()}));loadActive()}
+function saveActive(){const s=cfgStages[active];if(!document.getElementById('modelId'))return;s.model=document.getElementById('modelId').value;s.prompt=document.getElementById('promptVer').value;s.threshold=Number(document.getElementById('thresholdNum').value);s.timeout=Number(document.getElementById('timeout').value);s.retry=Number(document.getElementById('retry').value)}
+function loadActive(){const s=cfgStages[active];document.getElementById('stageTitle').textContent=s.id+' '+s.name;document.getElementById('modelId').value=s.model;const pv=document.getElementById('promptVer');pv.innerHTML=`<option>${s.prompt}</option><option>previous-version</option>`;document.getElementById('threshold').value=s.threshold;document.getElementById('thresholdNum').value=s.threshold;document.getElementById('timeout').value=s.timeout;document.getElementById('retry').value=s.retry}
+function testStage(){saveActive();const s=cfgStages[active],r=document.getElementById('testResult');r.textContent='测试中：'+s.id+' '+s.name+' ...';setTimeout(()=>r.textContent=`测试完成\nlatency: ${(0.8+active*.3).toFixed(1)}s\nmodel: ${s.model}\nthreshold: ${s.threshold}\n结果：通过沙箱校验；未写入 Candidate。`,700)}
+</script>
+
+</body></html>
