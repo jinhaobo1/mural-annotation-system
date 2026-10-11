@@ -12,6 +12,9 @@ env/
 *.db-shm
 *.db-wal
 
+# 本地机器相关脚本（含服务器地址/密钥路径，不进公开仓库）
+push.bat
+
 # IDE / 系统
 .idea/
 .vscode/
