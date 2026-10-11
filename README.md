@@ -1,3 +1,4 @@
+<!-- Owner: 蔡振翰（B丙·数据导出部署） -->
 # 壁画结构化语义标注系统 · 框架骨架（Skeleton）
 
 > 本仓库是**可填充的工程骨架**：目录结构、函数/类签名、docstring、TODO 占位均已就位，
@@ -11,6 +12,18 @@
 - **导出**：`GET /api/export?format=json|jsonl`，附导出 QC 校验（`backend/qc.py`）
 - **测试**：`unittest`（`tests/`）
 
+## 模块归属（Owner）
+
+| Owner | 岗位 | 负责文件 |
+|-------|------|---------|
+| 于金果 | A甲·标注引擎 | `backend/annotator.py`、`tests/test_annotator.py` |
+| 贾涵玉 | A乙·体系与评测 | `taxonomy/`、`benchmark/`、`backend/qc.py` |
+| 韩雨杰 | B甲·后端 | `backend/main.py`、`backend/db.py`、`tests/test_api.py` |
+| 李鹏祥 | B乙·前端 | `frontend/`（19 页 + assets） |
+| 蔡振翰 | B丙·数据导出部署 | `backend/seed_data.py`、`backend/exporter.py`、`run.py`、`start.sh`、`启动.bat`、`README.md`、`requirements.txt` |
+
+> 每个文件顶部已加归属注释（`# Owner` / `<!-- Owner -->` / `/* Owner */` 等，按文件类型用对应语法）。
+
 ## 目录结构
 
 ```
@@ -23,6 +36,8 @@ backend/
   exporter.py     JSON / JSONL 导出                     ← TODO 填实现
   seed_data.py    种子数据（与前端 shared.js 默认值一致） ← TODO 填实现
 frontend/         19 个页面 + assets/                   ← TODO 填页面内容
+taxonomy/         分类体系契约文件（taxonomy.json）       ← TODO 填词条
+benchmark/        金标准 + 评测脚本（eval.py）           ← TODO 填数据与评测
 tests/            unittest 测试                        ← TODO 填断言
 run.py            启动脚本（框架保留，可直接用）
 启动.bat          Windows 一键启动（双击）
@@ -48,8 +63,9 @@ start.sh          macOS / Linux 一键启动（bash start.sh）
    按 docstring 描述实现即可。模块间依赖关系见各文件顶部 import。
 2. **前端**：`frontend/assets/shared.js` 已列出全部状态函数签名（`// TODO` 占位）；
    19 个 HTML 页面为最小骨架，需补充页面结构并 `link` 到 `shared.css`、`script` 到 `shared.js`。
-3. **测试**：`tests/` 已列出测试类与方法名（对应教程 7.1 乐舞图、人物图、门吏图、7.2 案例与 API 全链路），
-   填实现与断言后运行 `python3 -m unittest discover -s tests`。
+3. **分类体系**：`taxonomy/taxonomy.json` 是标注引擎 S2 的输入，先填词条（11/9/14/43）。
+4. **金标准评测**：`benchmark/gold_standard/` 填 15–20 张金标准，`benchmark/eval.py` 实现 P/R 评测。
+5. **测试**：`tests/` 已列出测试类与方法名，填断言后 `python3 -m unittest discover -s tests`。
 
 ## 运行（填完实现后）
 

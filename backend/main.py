@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Owner: 韩雨杰（B甲·后端）
 """FastAPI 入口：前端静态托管 + REST API。
 
 API 一览（签名已定，逻辑待填）：

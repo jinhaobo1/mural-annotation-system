@@ -1,4 +1,5 @@
 @echo off
+rem Owner: 蔡振翰（B丙·数据导出部署）
 chcp 65001 >nul
 title 壁画结构化语义标注系统
 cd /d "%~dp0"

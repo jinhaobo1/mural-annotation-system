@@ -1,3 +1,4 @@
+<!-- Owner: 李鹏祥（B乙·前端） -->
 # frontend
 
 19 个 HTML 页面 + `assets/`（共享样式 `shared.css`、共享状态/同步层 `shared.js`）。

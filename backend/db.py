@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Owner: 韩雨杰（B甲·后端）
 """SQLite 持久化层：state 镜像表 + ai_runs 运行记录。
 
 设计约定：

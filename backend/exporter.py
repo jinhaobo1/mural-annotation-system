@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Owner: 蔡振翰（B丙·数据导出部署）
 """导出：把审核草稿（review_draft）构建为标准导出文档，再序列化为 JSON / JSONL。
 
 导出文档附带 QC 校验结果（见 qc.validate_document）。

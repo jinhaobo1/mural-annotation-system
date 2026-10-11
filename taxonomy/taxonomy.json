@@ -1,0 +1,8 @@
+{
+  "_owner": "贾涵玉（A乙·体系与评测）",
+  "_todo": "对照教程第2章填实：11个一级实体类别、HUMAN 9个二级类别、14个一级场景、5大关系族共43个关系类型。填完后删除所有 _ 前缀字段。",
+  "entity_classes": [],
+  "human_subclasses": [],
+  "scenes": [],
+  "relation_families": []
+}

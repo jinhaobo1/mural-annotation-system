@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Owner: 蔡振翰（B丙·数据导出部署）
 # 壁画结构化语义标注系统 · 一键启动（macOS / Linux）
 set -e
 cd "$(dirname "$0")"

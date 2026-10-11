@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Owner: 韩雨杰（B甲·后端）
 """API 全链路测试（FastAPI TestClient）。
 
 覆盖：health / bootstrap / state 白名单与往返 / samples / ai run 版本递增 /
