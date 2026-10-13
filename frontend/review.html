@@ -1,15 +1,326 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 标注审核</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「标注审核」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>人工审核 - 壁画结构化语义标注系统</title><link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="review">
+<div class="page-head">
+  <div><h1>人工审核与校正</h1><p>左侧为壁画与 BBox；右侧统一完成 Scene、Entity、GROUP、EVENT、Relation 的结构化审核。</p></div>
+  <div class="actions"><a class="btn" href="ai-run.html">重新运行 AI</a><button class="btn" id="saveDraftTop">保存草稿</button><a class="btn" href="json-preview.html">预览入库 JSON</a><a class="btn primary" id="submitReviewTop" href="json-preview.html">提交审核（先检查）</a></div>
+</div>
+<div class="meta-strip" id="reviewMeta"></div>
+<div class="card card-pad" style="margin-bottom:14px">
+  <div class="row"><div><strong id="taskTitle">当前任务</strong><div id="taskMeta" style="font-size:11px;color:#667085;margin-top:3px"></div></div><div class="spacer"></div><span id="taskStatus" class="badge blue"></span></div>
+  <div id="workflowStrip" class="workflow-strip" style="margin-top:10px"></div>
+</div>
+
+<div class="review-v6">
+  <div class="review-main">
+    <div class="work-card">
+      <div class="work-head">壁画图像 / BBox 校正 <span class="badge orange" id="drawState">普通模式</span><div class="spacer"></div><span class="bbox-coords" id="coordLabel">E1 [160,390,500,700]</span></div>
+      <div class="bbox-toolbar">
+        <button class="btn small" id="drawBtn">＋绘制新 BBox</button>
+        <button class="btn small" id="resetBtn">重置 AI 框</button>
+        <button class="btn small danger" id="deleteBtn">删除 BBox</button>
+      </div>
+      <div class="image-stage"><div class="img-canvas" id="canvas"><img src="assets/sample_mural.png" alt="壁画图片">
+        <div class="bbox selected" data-id="E1" style="left:16%;top:39%;width:34%;height:31%"><span class="label">E1 · 人物</span><i class="handle nw"></i><i class="handle ne"></i><i class="handle sw"></i><i class="handle se"></i></div>
+        <div class="bbox" data-id="E2" style="left:48%;top:41%;width:34%;height:30%"><span class="label">E2 · 人物</span><i class="handle nw"></i><i class="handle ne"></i><i class="handle sw"></i><i class="handle se"></i></div>
+      </div></div>
+      <div class="caption-box"><strong>Caption：</strong><span id="reviewCaption"></span></div>
+    </div>
+
+    <div class="card card-pad" style="margin-top:14px"><h2 class="section-title">当前结构摘要</h2><div id="structureSummary" class="structure-map"></div></div>
+  </div>
+
+  <aside class="review-side">
+    <div class="work-card">
+      <div class="work-head">结构化审核面板 <div class="spacer"></div><span class="badge blue">审核</span></div>
+      <div class="review-tabs v7">
+        <button class="review-tab active" data-rpanel="scene">Scene</button>
+        <button class="review-tab" data-rpanel="entity">Entity</button>
+        <button class="review-tab" data-rpanel="group">GROUP</button>
+        <button class="review-tab" data-rpanel="event">EVENT</button>
+        <button class="review-tab" data-rpanel="relation">Relation</button>
+      </div>
+
+      <div class="side-scroll">
+
+        <!-- Scene -->
+        <section class="review-panel active" data-rpanel-body="scene">
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">Scene 场景层级</h3><div class="spacer"></div><button class="btn small" id="addSceneBtn">＋场景</button></div>
+            <div class="schema-source">一级场景 → 二级场景；一幅壁画可以有多条 Scene。</div>
+            <div id="sceneRows" style="margin-top:10px"></div><div class="section-save"><span>修改场景后可保存当前草稿</span><button class="btn primary small" id="saveSceneBtn" type="button">保存 Scene</button></div>
+          </div>
+        </section>
+
+        <!-- Entity -->
+        <section class="review-panel" data-rpanel-body="entity">
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">实体</h3><div class="spacer"></div><button class="btn small" id="addEntityBtn">＋实体</button></div>
+            <div id="entityChips" class="chip-list" style="margin-top:9px"></div>
+          </div>
+          <div class="form-section">
+            <h3>三级分类</h3>
+            <div class="field"><label>一级分类 *</label><select id="level1Cat" class="select" style="width:100%"></select></div>
+            <div class="field"><label>二级分类 *</label><select id="level2Cat" class="select" style="width:100%"></select></div>
+            <div class="field"><label>三级分类 *</label><select id="level3Cat" class="select" style="width:100%"></select></div>
+            <div id="entityPath" class="hierarchy-path"></div>
+            <div class="field" style="margin-top:9px"><label>BBox（0-1000）</label><input id="bboxField" class="input" readonly style="width:100%"></div>
+            <div class="field"><label>Visibility</label><select id="visibility" class="select" style="width:100%"><option>clear</option><option>partial</option><option>occluded</option><option>damaged</option><option>unclear</option></select></div>
+          </div>
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">Attribute / State / Action</h3></div>
+            <div class="add-menu"><button class="btn small" data-addkind="attributes">＋Attribute</button><button class="btn small" data-addkind="states">＋State</button><button class="btn small" data-addkind="actions">＋Action</button></div>
+            <div id="factList" style="margin-top:10px"></div><div class="section-save"><span>保存当前实体及语义修改</span><button class="btn primary small" id="saveEntityBtn" type="button">保存 Entity</button></div>
+          </div>
+        </section>
+
+        <!-- GROUP -->
+        <section class="review-panel" data-rpanel-body="group">
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">GROUP 群组编辑</h3><div class="spacer"></div><button class="btn small" id="addGroupBtn">＋GROUP</button></div>
+            <div class="group-event-helper">GROUP 用于多人共享语义。示例：上排四人共同“盘腿而坐并观赏”，下排四人共同“舞蹈”；右侧三女还可作为 G2 的子群。</div>
+            <div id="groupSwitch" class="node-switch"></div>
+          </div>
+          <div id="groupEditorBox" class="form-section">
+            <div class="field-grid">
+              <div class="field"><label>Group ID</label><input id="gId" class="input" readonly style="width:100%"></div>
+              <div class="field"><label>Group 类型</label><select id="gType" class="select" style="width:100%"><option>观众组</option><option>舞者组</option><option>人物子组</option><option>仪卫行列</option><option>乐队</option><option>侍从组</option><option>人物组</option></select></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Count</label><input id="gCount" class="input" type="number" min="0" style="width:100%"></div>
+              <div class="field"><label>Count Type</label><select id="gCountType" class="select" style="width:100%"><option>exact</option><option>lower_bound</option><option>approximate</option><option>indefinite</option></select></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Layout</label><select id="gLayout" class="select" style="width:100%"><option>上排</option><option>下排</option><option>左侧</option><option>右侧</option><option>队列</option><option>环绕</option><option>其他</option></select></div>
+              <div class="field"><label>Subgroup Of</label><select id="gParent" class="select" style="width:100%"></select></div>
+            </div>
+            <div class="field"><label>Members</label><div id="gMembers" class="member-grid"></div><div class="hint">个体无法可靠区分时，可仅保留 Count，不强制逐一绑定成员。</div></div>
+
+            <div class="row"><h3 style="margin:0">共享语义</h3><div class="spacer"></div></div>
+            <div class="add-menu"><button class="btn small" data-gfact="shared_attributes">＋Attribute</button><button class="btn small" data-gfact="shared_states">＋State</button><button class="btn small" data-gfact="shared_actions">＋Action</button></div>
+            <div id="gSharedFacts" style="margin-top:10px"></div>
+
+            <div class="field-grid">
+              <div class="field"><label>AI Confidence</label><input id="gConfidence" class="input" readonly style="width:100%"></div>
+              <div class="field"><label>审核状态</label><select id="gReviewStatus" class="select" style="width:100%"><option>pending</option><option>accepted</option><option>edited</option><option>rejected</option><option>needs_expert</option></select></div>
+            </div>
+            <div class="row"><button class="btn danger" id="deleteGroupBtn">删除 GROUP</button><div class="spacer"></div><button class="btn primary" id="saveGroupBtn">保存 GROUP</button></div>
+          </div>
+        </section>
+
+        <!-- EVENT -->
+        <section class="review-panel" data-rpanel-body="event">
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">EVENT 事件编辑</h3><div class="spacer"></div><button class="btn small" id="addEventBtn">＋EVENT</button></div>
+            <div class="group-event-helper">EVENT 表示围绕同一活动形成的高层语义单元。示例：EV1=舞蹈；G2 作为 performer，G1 作为 observer。</div>
+            <div id="eventSwitch" class="node-switch"></div>
+          </div>
+          <div id="eventEditorBox" class="form-section">
+            <div class="field-grid">
+              <div class="field"><label>Event ID</label><input id="evId" class="input" readonly style="width:100%"></div>
+              <div class="field"><label>Family</label><select id="evFamily" class="select" style="width:100%"><option>PERFORMANCE</option><option>DAILY_LIFE</option><option>TRAVEL</option><option>LABOR</option><option>HUNTING</option><option>RITUAL</option><option>SOCIAL</option><option>HISTORICAL</option><option>MYTHIC</option><option>OTHER</option></select></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Event Type</label><select id="evType" class="select" style="width:100%"></select></div>
+              <div class="field"><label>Certainty</label><select id="evCertainty" class="select" style="width:100%"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select></div>
+            </div>
+            <div class="field"><label>Region（可选）</label><input id="evRegion" class="input" placeholder="如 R1 / upper_region" style="width:100%"></div>
+            <div class="row"><h3 style="margin:0">Participants / Roles</h3><div class="spacer"></div><button class="btn small" id="addParticipantBtn">＋参与者</button></div>
+            <div id="participantRows" style="margin-top:9px"></div>
+            <div class="field-grid">
+              <div class="field"><label>AI Confidence</label><input id="evConfidence" class="input" readonly style="width:100%"></div>
+              <div class="field"><label>审核状态</label><select id="evReviewStatus" class="select" style="width:100%"><option>pending</option><option>accepted</option><option>edited</option><option>rejected</option><option>needs_expert</option></select></div>
+            </div>
+            <div class="row"><button class="btn danger" id="deleteEventBtn">删除 EVENT</button><div class="spacer"></div><button class="btn primary" id="saveEventBtn">保存 EVENT</button></div>
+          </div>
+        </section>
+
+        <!-- Relation -->
+        <section class="review-panel" data-rpanel-body="relation">
+          <div class="form-section">
+            <div class="row"><h3 style="margin:0">Relation 关系编辑</h3><div class="spacer"></div><button class="btn small" id="addRelationBtn">＋关系</button></div>
+            <div class="schema-source">Relation 与 GROUP / EVENT 并列编辑；Subject/Object 可引用 Entity、GROUP 或 EVENT。</div>
+            <div id="relationRows" style="margin-top:10px"></div><div class="section-save"><span>保存关系修改</span><button class="btn primary small" id="saveRelationBtn" type="button">保存 Relation</button></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </aside>
+</div>
+<div class="review-submit-bar card"><div><strong>完成本轮标注与审核？</strong><p>先预览 JSON 并完成 Schema/QC 校验，确认后提交当前审核阶段。</p></div><a class="btn primary" id="submitReviewBottom" href="json-preview.html">提交审核（先检查）</a></div>
+
+<!-- Fact modal -->
+<div class="modal-bg" id="factModal"><div class="modal">
+  <div class="modal-head"><strong id="factModalTitle">新增事实</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('factModal')">×</button></div>
+  <div class="modal-body"><input id="factKind" type="hidden"><div class="field"><label>字段 *</label><select id="factName" class="select" style="width:100%"></select></div><div class="field"><label>值 *</label><select id="factValue" class="select" style="width:100%"></select></div><div class="field-grid"><div class="field"><label>Certainty</label><select id="factCertainty" class="select" style="width:100%"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select></div><div class="field"><label>Evidence</label><select id="factEvidence" class="select" style="width:100%"><option>caption_explicit</option><option>caption_inference</option><option>visual</option><option>human_review</option><option>title</option></select></div></div></div>
+  <div class="modal-foot"><button class="btn" onclick="closeModal('factModal')">取消</button><button class="btn primary" id="saveFactBtn">添加</button></div>
+</div></div>
+
+<!-- GROUP shared fact modal -->
+<div class="modal-bg" id="groupFactModal"><div class="modal">
+  <div class="modal-head"><strong>新增 GROUP 共享语义</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('groupFactModal')">×</button></div>
+  <div class="modal-body"><input id="groupFactKind" type="hidden"><div class="field"><label>字段</label><select id="groupFactName" class="select" style="width:100%"></select></div><div class="field"><label>值</label><select id="groupFactValue" class="select" style="width:100%"></select></div><div class="field"><label>Certainty</label><select id="groupFactCertainty" class="select" style="width:100%"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select></div></div>
+  <div class="modal-foot"><button class="btn" onclick="closeModal('groupFactModal')">取消</button><button class="btn primary" id="saveGroupFactBtn">添加</button></div>
+</div></div>
+<div id="toast" class="toast"></div><script src="assets/shared.js"></script>
+<script>
+let draft,currentId="E1",selectedGroupId="G1",selectedEventId="EV1",selectedBox=null,drawMode=false;
+document.addEventListener("DOMContentLoaded",()=>setTimeout(initReviewV7,0));
+
+function initReviewV7(){
+  draft=normalizeReviewDraftV7();
+  const m=draft.sample;
+  document.getElementById("reviewMeta").innerHTML=[["壁画ID",m.mural_id],["名称",m.name],["当前角色",APP.roles[getRole()].name],["Candidate","v3"]].map(x=>`<div class="meta-box"><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join("");
+  document.getElementById("reviewCaption").textContent=m.caption;
+  const task=currentTask();
+  document.getElementById("taskTitle").textContent=task.id+" · "+task.name;
+  document.getElementById("taskMeta").textContent="审核员："+task.reviewer+" · 专家："+task.expert+" · 截止："+task.due;
+  document.getElementById("taskStatus").textContent=taskStatusLabel(task.status);
+  document.getElementById("workflowStrip").innerHTML=renderWorkflowStrip(task.status);
+
+  bindTabs();
+  renderScenes();
+  renderEntityChips();
+  selectEntity(draft.entities[0]?.id||"E1");
+  renderGroupSwitch();selectGroup(draft.groups[0]?.id||"");
+  renderEventSwitch();selectEvent(draft.events[0]?.id||"");
+  renderRelations();renderStructureSummary();initBBox();
+
+  document.getElementById("saveDraftTop").onclick=()=>{saveReviewDraft(draft);toast("审核草稿已保存")};
+  document.getElementById("saveSceneBtn").onclick=()=>{persist();toast("Scene 已保存到审核草稿")};
+  document.getElementById("saveEntityBtn").onclick=()=>{if(!entity()){toast("请先选择实体");return}persist();toast(currentId+" 已保存到审核草稿")};
+  document.getElementById("saveRelationBtn").onclick=()=>{persist();toast("Relation 已保存到审核草稿")};
+  const stageLabel={reviewer:"提交专家复核",expert:"提交管理员验收",admin:"提交验收"}[getRole()]||"查看提交检查";
+  document.getElementById("submitReviewTop").textContent=stageLabel+"（先检查）";
+  document.getElementById("submitReviewBottom").textContent=stageLabel+"（先检查）";
+  document.getElementById("addSceneBtn").onclick=addScene;
+  document.getElementById("addEntityBtn").onclick=()=>{switchPanel("entity");document.getElementById("drawBtn").click();toast("请在左侧图像上拖拽新增实体框")};
+  document.querySelectorAll("[data-addkind]").forEach(b=>b.onclick=()=>openFactModal(b.dataset.addkind));
+  document.getElementById("saveFactBtn").onclick=saveFact;
+
+  document.getElementById("addGroupBtn").onclick=addGroup;
+  document.getElementById("saveGroupBtn").onclick=saveGroup;
+  document.getElementById("deleteGroupBtn").onclick=deleteGroup;
+  document.querySelectorAll("[data-gfact]").forEach(b=>b.onclick=()=>openGroupFactModal(b.dataset.gfact));
+  document.getElementById("saveGroupFactBtn").onclick=saveGroupFact;
+
+  document.getElementById("addEventBtn").onclick=addEvent;
+  document.getElementById("saveEventBtn").onclick=saveEvent;
+  document.getElementById("deleteEventBtn").onclick=deleteEvent;
+  document.getElementById("addParticipantBtn").onclick=addParticipant;
+
+  document.getElementById("addRelationBtn").onclick=addRelation;
+}
+
+function bindTabs(){document.querySelectorAll(".review-tab").forEach(b=>b.onclick=()=>switchPanel(b.dataset.rpanel))}
+function switchPanel(id){document.querySelectorAll(".review-tab").forEach(b=>b.classList.toggle("active",b.dataset.rpanel===id));document.querySelectorAll(".review-panel").forEach(p=>p.classList.toggle("active",p.dataset.rpanelBody===id))}
+function optionLabel(item){if(typeof item==="string")return item;const id=item.id||item.value||"",name=item.name||item.label||item.value||id;return id && id!==name ? id+" · "+name : name}
+function fillSelect(el,items,selected){el.innerHTML="";items.forEach(it=>{const o=document.createElement("option");o.value=typeof it==="string"?it:(it.id||it.value||it.name);o.textContent=optionLabel(it);if(o.value===selected)o.selected=true;el.appendChild(o)});if(!items.length){const o=document.createElement("option");o.value="";o.textContent="— 无可选项 —";el.appendChild(o)}}
+function persist(){saveReviewDraft(draft);renderStructureSummary()}
+
+/* ---------- Scene ---------- */
+function renderScenes(){
+ const root=document.getElementById("sceneRows"),hier=getSceneHierarchy();root.innerHTML="";
+ (draft.scene.annotations||[]).forEach((s,i)=>{
+  const d=document.createElement("div");d.className="scene-row";
+  d.innerHTML=`<div class="grid2"><div class="field"><label>一级场景</label><select class="select l1"></select></div><div class="field"><label>二级场景</label><select class="select l2"></select></div></div>
+  <div class="grid3"><div class="field"><label>Certainty</label><select class="select cert"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select></div><div class="field"><label>Evidence</label><select class="select evi"><option>caption_explicit</option><option>caption_inference</option><option>visual</option><option>human_review</option></select></div><div class="field"><label>审核状态</label><select class="select stat"><option>pending</option><option>accepted</option><option>edited</option><option>rejected</option></select></div></div>
+  <div class="row"><div class="hierarchy-path path"></div><div class="spacer"></div><button class="btn small danger del">删除</button></div>`;
+  const l1=d.querySelector(".l1"),l2=d.querySelector(".l2");fillSelect(l1,hier.map(x=>({id:x.id,name:x.name})),s.level1_id);
+  function refill(sel){const h=hier.find(x=>x.id===l1.value);fillSelect(l2,(h?.children||[]).map(x=>({id:x.id,name:x.name})),sel)}
+  refill(s.level2_id);d.querySelector(".cert").value=s.certainty||"certain";d.querySelector(".evi").value=s.evidence||"human_review";d.querySelector(".stat").value=s.review_status||"pending";
+  function commit(){const h=hier.find(x=>x.id===l1.value),c=h?.children.find(x=>x.id===l2.value);s.level1_id=l1.value;s.level1=h?.name||"";s.level2_id=l2.value;s.level2=c?.name||"";s.certainty=d.querySelector(".cert").value;s.evidence=d.querySelector(".evi").value;s.review_status=d.querySelector(".stat").value;d.querySelector(".path").innerHTML=`<span>${s.level1}</span><b>›</b><span>${s.level2}</span>`;persist()}
+  l1.onchange=()=>{refill("");commit()};l2.onchange=commit;d.querySelector(".cert").onchange=commit;d.querySelector(".evi").onchange=commit;d.querySelector(".stat").onchange=commit;d.querySelector(".del").onclick=()=>{draft.scene.annotations.splice(i,1);persist();renderScenes();toast("Scene 已删除")};commit();root.appendChild(d)
+ })
+}
+function addScene(){const n=(draft.scene.annotations?.length||0)+1;draft.scene.annotations.push({id:"S"+n,level1_id:"SCENE_LIFE",level1:"人物生活",level2_id:"SCENE_INTERACTION",level2:"人物互动",certainty:"certain",evidence:"human_review",review_status:"edited"});persist();renderScenes();toast("已新增 Scene")}
+
+/* ---------- Entity ---------- */
+function entity(){return draft.entities.find(e=>e.id===currentId)}
+function renderEntityChips(){const r=document.getElementById("entityChips");r.innerHTML=draft.entities.map(e=>`<button class="btn small ${e.id===currentId?"primary":""}" data-ent="${e.id}">${e.id} · ${e.fine_category?.value||e.base_category}</button>`).join("");r.querySelectorAll("[data-ent]").forEach(b=>b.onclick=()=>selectEntity(b.dataset.ent))}
+function selectEntity(id){currentId=id;const e=entity();if(!e)return;renderEntityChips();syncCategory(e);document.getElementById("visibility").value=e.visibility||"clear";document.getElementById("bboxField").value="["+(e.bbox||[]).join(",")+"]";renderFacts();document.querySelectorAll(".bbox").forEach(b=>b.classList.toggle("selected",b.dataset.id===id));selectedBox=document.querySelector('.bbox[data-id="'+id+'"]');if(selectedBox)document.getElementById("coordLabel").textContent=id+" ["+e.bbox.join(",")+"]"}
+function syncCategory(e){
+ const tax=getAnnotationTaxonomy(),l1=document.getElementById("level1Cat"),l2=document.getElementById("level2Cat"),l3=document.getElementById("level3Cat");
+ fillSelect(l1,tax.terms.filter(t=>!t.parent),e.level1_category||e.base_category||"HUMAN");
+ function sec(sel){fillSelect(l2,tax.terms.filter(t=>t.parent===l1.value),sel)}
+ function third(sel){fillSelect(l3,tax.terms.filter(t=>t.parent===l2.value),sel)}
+ sec(e.level2_category||"");third(e.level3_category||e.fine_category?.taxonomy_id||"");
+ function commit(){const t1=taxTerm(l1.value),t2=taxTerm(l2.value),t3=taxTerm(l3.value);e.level1_category=l1.value;e.level2_category=l2.value;e.level3_category=l3.value;e.base_category=l1.value;e.sub_category=t2?.name||"";e.fine_category=e.fine_category||{};e.fine_category.taxonomy_id=l3.value;e.fine_category.value=t3?.name||"";document.getElementById("entityPath").innerHTML=`<span>${t1?.name||""}</span><b>›</b><span>${t2?.name||""}</span><b>›</b><span>${t3?.name||""}</span>`;persist();renderEntityChips()}
+ l1.onchange=()=>{sec("");third("");commit();renderFacts()};l2.onchange=()=>{third("");commit();renderFacts()};l3.onchange=commit;document.getElementById("visibility").onchange=()=>{e.visibility=document.getElementById("visibility").value;persist()};commit()
+}
+function renderFacts(){
+ const e=entity(),root=document.getElementById("factList");root.innerHTML="";
+ [["attributes","Attribute","attr"],["states","State","state"],["actions","Action","action"]].forEach(([key,label,cls])=>(e[key]||[]).forEach((f,idx)=>{
+  const schemas=factSchemasFor(e.level1_category||e.base_category,key),schema=schemas.find(s=>s.code===f.name),d=document.createElement("div");d.className="fact-editor";
+  d.innerHTML=`<div class="fact-top"><span class="fact-kind ${cls}">${label}</span><strong>${schema?.name||f.name}</strong><span class="spacer"></span>${f.ai_confidence!=null?`<span class="badge blue">AI ${Number(f.ai_confidence).toFixed(2)}</span>`:""}</div><div class="fact-main"><select class="select fn"></select><select class="select fv"></select></div><div class="fact-meta"><select class="select fc"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select><select class="select fe"><option>caption_explicit</option><option>caption_inference</option><option>visual</option><option>human_review</option><option>title</option></select></div><div class="row" style="margin-top:8px"><span style="font-size:10px;color:#667085">值只显示具体名称，例如“儿童”</span><div class="spacer"></div><button class="btn small danger">删除</button></div>`;
+  const ns=d.querySelector(".fn"),vs=d.querySelector(".fv");fillSelect(ns,schemas.map(s=>({id:s.code,name:s.name})),f.name);
+  function rv(sel){const s=schemas.find(x=>x.code===ns.value);fillSelect(vs,(s?.values||["不详"]).map(v=>({id:v,name:v})),sel)}
+  rv(f.value);d.querySelector(".fc").value=f.certainty||"certain";d.querySelector(".fe").value=f.evidence||"human_review";
+  ns.onchange=()=>{f.name=ns.value;rv("");f.value=vs.value;persist()};vs.onchange=()=>{f.value=vs.value;persist()};d.querySelector(".fc").onchange=ev=>{f.certainty=ev.target.value;persist()};d.querySelector(".fe").onchange=ev=>{f.evidence=ev.target.value;persist()};d.querySelector(".danger").onclick=()=>{e[key].splice(idx,1);persist();renderFacts();toast(label+" 已删除")};root.appendChild(d)
+ }))
+}
+function openFactModal(kind){const e=entity(),schemas=factSchemasFor(e.level1_category||e.base_category,kind),ns=document.getElementById("factName"),vs=document.getElementById("factValue");document.getElementById("factKind").value=kind;document.getElementById("factModalTitle").textContent="新增 "+({attributes:"Attribute",states:"State",actions:"Action"}[kind]);fillSelect(ns,schemas.map(s=>({id:s.code,name:s.name})),"");function rv(){const s=schemas.find(x=>x.code===ns.value);fillSelect(vs,(s?.values||["不详"]).map(v=>({id:v,name:v})),"")}ns.onchange=rv;rv();openModal("factModal")}
+function saveFact(){const kind=document.getElementById("factKind").value,n=document.getElementById("factName").value,v=document.getElementById("factValue").value;if(!n||!v){toast("请选择字段和值");return}entity()[kind].push({name:n,value:v,certainty:document.getElementById("factCertainty").value,evidence:document.getElementById("factEvidence").value,source_type:"human_added"});persist();closeModal("factModal");renderFacts();toast("事实已添加")}
+
+/* ---------- GROUP ---------- */
+function groupObj(){return draft.groups.find(g=>g.id===selectedGroupId)}
+function renderGroupSwitch(){const r=document.getElementById("groupSwitch");r.innerHTML=draft.groups.map(g=>`<button class="${g.id===selectedGroupId?"active":""}" data-g="${g.id}">${g.id} · ${g.type}</button>`).join("");r.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>selectGroup(b.dataset.g))}
+function selectGroup(id){selectedGroupId=id;const g=groupObj();if(!g)return;renderGroupSwitch();document.getElementById("gId").value=g.id;document.getElementById("gType").value=g.type;document.getElementById("gCount").value=g.count??"";document.getElementById("gCountType").value=g.count_type||"exact";document.getElementById("gLayout").value=g.layout||"其他";const gp=document.getElementById("gParent");gp.innerHTML='<option value="">无</option>'+draft.groups.filter(x=>x.id!==g.id).map(x=>`<option value="${x.id}">${x.id} · ${x.type}</option>`).join("");gp.value=g.subgroup_of||"";document.getElementById("gMembers").innerHTML=draft.entities.map(e=>`<label class="member-option"><input type="checkbox" value="${e.id}" ${(g.members||[]).includes(e.id)?"checked":""}>${e.id} · ${e.fine_category?.value||e.base_category}</label>`).join("")||'<span style="font-size:10px;color:#98a2b3">当前没有可绑定实体</span>';document.getElementById("gConfidence").value=Number(g.ai_confidence??0).toFixed(2);document.getElementById("gReviewStatus").value=g.review_status||"pending";renderGroupFacts()}
+function renderGroupFacts(){const g=groupObj(),root=document.getElementById("gSharedFacts");root.innerHTML="";[["shared_attributes","Attribute","attr"],["shared_states","State","state"],["shared_actions","Action","action"]].forEach(([k,label,cls])=>(g[k]||[]).forEach((f,i)=>{const d=document.createElement("div");d.className="inline-fact";d.innerHTML=`<div class="top"><span class="fact-kind ${cls}">${label}</span><strong>${f.name}</strong><span>${f.value}</span><div class="spacer"></div><span class="badge orange">${f.certainty}</span><button class="icon-btn">×</button></div>`;d.querySelector("button").onclick=()=>{g[k].splice(i,1);persist();renderGroupFacts();toast("共享语义已删除")};root.appendChild(d)}))}
+function saveGroup(){const g=groupObj();g.type=document.getElementById("gType").value;g.count=Number(document.getElementById("gCount").value)||null;g.count_type=document.getElementById("gCountType").value;g.layout=document.getElementById("gLayout").value;g.subgroup_of=document.getElementById("gParent").value||null;g.members=[...document.querySelectorAll("#gMembers input:checked")].map(x=>x.value);g.review_status=document.getElementById("gReviewStatus").value;persist();renderGroupSwitch();renderRelations();toast(g.id+" 已保存")}
+function addGroup(){let n=1;while(draft.groups.some(g=>g.id==="G"+n))n++;draft.groups.push({id:"G"+n,type:"人物组",count:null,count_type:"exact",layout:"其他",members:[],subgroup_of:null,shared_attributes:[],shared_states:[],shared_actions:[],review_status:"edited",ai_confidence:0});selectedGroupId="G"+n;persist();renderGroupSwitch();selectGroup(selectedGroupId);renderRelations();toast("已新增 "+selectedGroupId)}
+function deleteGroup(){const g=groupObj();if(!g||!confirm("删除 "+g.id+"？相关 EVENT participant 与 Relation 引用也会清理。"))return;draft.groups=draft.groups.filter(x=>x.id!==g.id);draft.events.forEach(e=>e.participants=(e.participants||[]).filter(p=>p.node!==g.id));draft.relations=draft.relations.filter(r=>r.subject!==g.id&&r.object!==g.id);selectedGroupId=draft.groups[0]?.id||"";persist();renderGroupSwitch();if(selectedGroupId)selectGroup(selectedGroupId);renderEventSwitch();if(selectedEventId)selectEvent(selectedEventId);renderRelations();toast("GROUP 已删除")}
+function openGroupFactModal(kind){const schemas=factSchemasFor("HUMAN",kind==="shared_attributes"?"attributes":kind==="shared_states"?"states":"actions"),ns=document.getElementById("groupFactName"),vs=document.getElementById("groupFactValue");document.getElementById("groupFactKind").value=kind;fillSelect(ns,schemas.map(s=>({id:s.code,name:s.name})),"");function rv(){const s=schemas.find(x=>x.code===ns.value);fillSelect(vs,(s?.values||["不详"]).map(v=>({id:v,name:v})),"")}ns.onchange=rv;rv();openModal("groupFactModal")}
+function saveGroupFact(){const k=document.getElementById("groupFactKind").value;groupObj()[k].push({name:document.getElementById("groupFactName").value,value:document.getElementById("groupFactValue").value,certainty:document.getElementById("groupFactCertainty").value,evidence:"human_review"});persist();closeModal("groupFactModal");renderGroupFacts();toast("GROUP 共享语义已添加")}
+
+/* ---------- EVENT ---------- */
+function eventObj(){return draft.events.find(e=>e.id===selectedEventId)}
+function renderEventSwitch(){const r=document.getElementById("eventSwitch");r.innerHTML=draft.events.map(e=>`<button class="${e.id===selectedEventId?"active":""}" data-ev="${e.id}">${e.id} · ${e.type}</button>`).join("");r.querySelectorAll("[data-ev]").forEach(b=>b.onclick=()=>selectEvent(b.dataset.ev))}
+function selectEvent(id){selectedEventId=id;const e=eventObj();if(!e)return;renderEventSwitch();document.getElementById("evId").value=e.id;document.getElementById("evFamily").value=e.family||"OTHER";fillSelect(document.getElementById("evType"),(getAnnotationTaxonomy().events||["舞蹈"]).map(x=>({id:x,name:x})),e.type);document.getElementById("evCertainty").value=e.certainty||"certain";document.getElementById("evRegion").value=e.region||"";document.getElementById("evConfidence").value=Number(e.ai_confidence??0).toFixed(2);document.getElementById("evReviewStatus").value=e.review_status||"pending";renderParticipants()}
+function renderParticipants(){const e=eventObj(),root=document.getElementById("participantRows"),nodes=[...draft.groups.map(g=>({id:g.id,name:g.id+" · "+g.type})),...draft.entities.map(x=>({id:x.id,name:x.id+" · "+(x.fine_category?.value||x.base_category)}))];root.innerHTML=(e.participants||[]).map((p,i)=>`<div class="participant-row-v7"><select class="select pn" data-i="${i}">${nodes.map(n=>`<option value="${n.id}" ${n.id===p.node?"selected":""}>${n.name}</option>`).join("")}</select><select class="select pr" data-i="${i}"><option ${p.role==="performer"?"selected":""}>performer</option><option ${p.role==="observer"?"selected":""}>observer</option><option ${p.role==="musician"?"selected":""}>musician</option><option ${p.role==="participant"?"selected":""}>participant</option><option ${p.role==="host"?"selected":""}>host</option><option ${p.role==="guest"?"selected":""}>guest</option><option ${p.role==="attendant"?"selected":""}>attendant</option></select><button class="btn small danger" data-del="${i}">×</button></div>`).join("");root.querySelectorAll(".pn").forEach(x=>x.onchange=()=>{e.participants[Number(x.dataset.i)].node=x.value;persist()});root.querySelectorAll(".pr").forEach(x=>x.onchange=()=>{e.participants[Number(x.dataset.i)].role=x.value;persist()});root.querySelectorAll("[data-del]").forEach(x=>x.onclick=()=>{e.participants.splice(Number(x.dataset.del),1);persist();renderParticipants()})}
+function addParticipant(){const e=eventObj(),node=draft.groups[0]?.id||draft.entities[0]?.id||"";e.participants.push({node,role:"participant"});persist();renderParticipants()}
+function saveEvent(){const e=eventObj();e.family=document.getElementById("evFamily").value;e.type=document.getElementById("evType").value;e.certainty=document.getElementById("evCertainty").value;e.region=document.getElementById("evRegion").value||null;e.review_status=document.getElementById("evReviewStatus").value;persist();renderEventSwitch();renderRelations();toast(e.id+" 已保存")}
+function addEvent(){let n=1;while(draft.events.some(e=>e.id==="EV"+n))n++;draft.events.push({id:"EV"+n,family:"OTHER",type:(getAnnotationTaxonomy().events||["其他"])[0],region:null,participants:[],certainty:"certain",evidence:"human_review",review_status:"edited",ai_confidence:0});selectedEventId="EV"+n;persist();renderEventSwitch();selectEvent(selectedEventId);renderRelations();toast("已新增 "+selectedEventId)}
+function deleteEvent(){const e=eventObj();if(!e||!confirm("删除 "+e.id+"？相关 Relation 引用也会清理。"))return;draft.events=draft.events.filter(x=>x.id!==e.id);draft.relations=draft.relations.filter(r=>r.subject!==e.id&&r.object!==e.id);selectedEventId=draft.events[0]?.id||"";persist();renderEventSwitch();if(selectedEventId)selectEvent(selectedEventId);renderRelations();toast("EVENT 已删除")}
+
+/* ---------- Relation ---------- */
+function allNodes(){return [...draft.entities.map(e=>({id:e.id,label:e.id+" · "+(e.fine_category?.value||e.base_category)})),...draft.groups.map(g=>({id:g.id,label:g.id+" · "+g.type})),...draft.events.map(e=>({id:e.id,label:e.id+" · "+e.type}))]}
+function renderRelations(){
+ const root=document.getElementById("relationRows"),rels=getRelationTaxonomy(),nodes=allNodes();root.innerHTML="";
+ (draft.relations||[]).forEach((r,i)=>{
+  const d=document.createElement("div");d.className="relation-row";
+  d.innerHTML=`<div class="grid2"><div class="field"><label>Family</label><select class="select rf"></select></div><div class="field"><label>Predicate</label><select class="select rp"></select></div></div><div class="grid2"><div class="field"><label>Subject</label><select class="select rs"></select></div><div class="field"><label>Object</label><select class="select ro"></select></div></div><div class="relation-preview"><div class="relation-node sl"></div><div class="relation-pred pl"></div><div class="relation-node ol"></div></div><div class="grid3"><div class="field"><label>Certainty</label><select class="select rc"><option>certain</option><option>probable</option><option>possible</option><option>unknown</option></select></div><div class="field"><label>Evidence</label><select class="select re"><option>caption_explicit</option><option>caption_inference</option><option>visual_geometry</option><option>visual</option><option>human_review</option></select></div><div class="field"><label>AI Confidence</label><input class="input conf" readonly></div></div><div class="schema-source rule"></div><div class="schema-source"><strong>AI 原值：</strong>${r.ai_original?`${r.ai_original.subject} ${r.ai_original.predicate} ${r.ai_original.object}`:"人工新增"}</div><div class="review-status-row"><button data-s="accepted">接受</button><button data-s="edited">修改</button><button data-s="rejected">拒绝</button><button data-s="needs_expert">专家</button><div class="spacer"></div><button class="btn small danger del">删除</button></div>`;
+  const fam=d.querySelector(".rf"),pred=d.querySelector(".rp"),sub=d.querySelector(".rs"),obj=d.querySelector(".ro");fillSelect(fam,[...new Set(rels.map(x=>x.family))].map(x=>({id:x,name:x})),r.family);
+  function fp(sel){fillSelect(pred,rels.filter(x=>x.family===fam.value).map(x=>({id:x.predicate,name:x.predicate})),sel)}
+  fp(r.predicate);fillSelect(sub,nodes.map(n=>({id:n.id,name:n.label})),r.subject);fillSelect(obj,nodes.map(n=>({id:n.id,name:n.label})),r.object);d.querySelector(".rc").value=r.certainty||"certain";d.querySelector(".re").value=r.evidence||"human_review";d.querySelector(".conf").value=Number(r.ai_confidence??0).toFixed(2);
+  function commit(){r.family=fam.value;r.predicate=pred.value;r.subject=sub.value;r.object=obj.value;r.certainty=d.querySelector(".rc").value;r.evidence=d.querySelector(".re").value;const rule=rels.find(x=>x.family===r.family&&x.predicate===r.predicate);d.querySelector(".rule").innerHTML=`<strong>关系约束：</strong>${rule?.sub||"ANY"} → ${r.predicate} → ${rule?.obj||"ANY"}`;d.querySelector(".sl").textContent=sub.options[sub.selectedIndex]?.textContent||sub.value;d.querySelector(".pl").textContent=r.predicate+" →";d.querySelector(".ol").textContent=obj.options[obj.selectedIndex]?.textContent||obj.value;persist()}
+  fam.onchange=()=>{fp("");commit()};pred.onchange=commit;sub.onchange=commit;obj.onchange=commit;d.querySelector(".rc").onchange=commit;d.querySelector(".re").onchange=commit;d.querySelectorAll("[data-s]").forEach(b=>{b.classList.toggle("active",b.dataset.s===r.review_status);b.onclick=()=>{r.review_status=b.dataset.s;d.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("active",x===b));persist();toast("Relation 状态："+r.review_status)}});d.querySelector(".del").onclick=()=>{draft.relations.splice(i,1);persist();renderRelations();toast("Relation 已删除")};commit();root.appendChild(d)
+ })
+}
+function addRelation(){const nodes=allNodes();if(nodes.length<2){toast("至少需要两个节点");return}let n=1;while(draft.relations.some(r=>r.id==="R"+n))n++;draft.relations.push({id:"R"+n,family:"SPATIAL",predicate:"left_of",subject:nodes[0].id,object:nodes[1].id,certainty:"certain",evidence:"human_review",ai_confidence:0,ai_original:null,review_status:"edited"});persist();renderRelations();toast("已新增 Relation")}
+
+/* ---------- Structure summary ---------- */
+function renderStructureSummary(){const r=document.getElementById("structureSummary");if(!r)return;r.innerHTML=`<span class="structure-node">Scene ${(draft.scene.annotations||[]).length}</span><span class="arrow">→</span><span class="structure-node">Entity ${draft.entities.length}</span><span class="arrow">→</span><span class="structure-node">GROUP ${draft.groups.length}</span><span class="arrow">→</span><span class="structure-node event">EVENT ${draft.events.length}</span><span class="arrow">→</span><span class="structure-node">Relation ${draft.relations.length}</span>`}
+
+/* ---------- BBox ---------- */
+function initBBox(){
+ const canvas=document.getElementById("canvas"),original={E1:{l:16,t:39,w:34,h:31},E2:{l:48,t:41,w:34,h:30}};selectedBox=canvas.querySelector(".bbox.selected");let drag=null,resize=null,start=null,preview=null;
+ function all(){return [...canvas.querySelectorAll(".bbox")]}
+ function update(box){const l=parseFloat(box.style.left),t=parseFloat(box.style.top),w=parseFloat(box.style.width),h=parseFloat(box.style.height),arr=[Math.round(l*10),Math.round(t*10),Math.round((l+w)*10),Math.round((t+h)*10)],e=draft.entities.find(x=>x.id===box.dataset.id);if(e)e.bbox=arr;if(box.dataset.id===currentId)document.getElementById("bboxField").value="["+arr.join(",")+"]";document.getElementById("coordLabel").textContent=box.dataset.id+" ["+arr.join(",")+"]";persist()}
+ function select(box){all().forEach(b=>b.classList.remove("selected"));box.classList.add("selected");selectedBox=box;selectEntity(box.dataset.id);switchPanel("entity")}
+ function down(e){if(drawMode)return;e.preventDefault();const b=e.currentTarget;select(b);const r=canvas.getBoundingClientRect(),s={x:e.clientX,y:e.clientY,l:parseFloat(b.style.left),t:parseFloat(b.style.top),w:parseFloat(b.style.width),h:parseFloat(b.style.height),cw:r.width,ch:r.height,box:b};if(e.target.classList.contains("handle"))resize={...s,corner:[...e.target.classList].find(c=>["nw","ne","sw","se"].includes(c))};else drag=s;window.addEventListener("pointermove",move);window.addEventListener("pointerup",up,{once:true})}
+ function move(e){if(drag){let l=Math.max(0,Math.min(100-drag.w,drag.l+(e.clientX-drag.x)/drag.cw*100)),t=Math.max(0,Math.min(100-drag.h,drag.t+(e.clientY-drag.y)/drag.ch*100));drag.box.style.left=l+"%";drag.box.style.top=t+"%";update(drag.box)}if(resize){let dx=(e.clientX-resize.x)/resize.cw*100,dy=(e.clientY-resize.y)/resize.ch*100,{l,t,w,h}=resize,c=resize.corner;if(c.includes("e"))w=Math.max(3,Math.min(100-l,w+dx));if(c.includes("s"))h=Math.max(3,Math.min(100-t,h+dy));if(c.includes("w")){let nl=Math.max(0,Math.min(l+w-3,l+dx));w+=l-nl;l=nl}if(c.includes("n")){let nt=Math.max(0,Math.min(t+h-3,t+dy));h+=t-nt;t=nt}Object.assign(resize.box.style,{left:l+"%",top:t+"%",width:w+"%",height:h+"%"});update(resize.box)}}
+ function up(){drag=null;resize=null;window.removeEventListener("pointermove",move);toast("BBox 修改已保存")}
+ all().forEach(b=>b.addEventListener("pointerdown",down));
+ document.getElementById("drawBtn").onclick=()=>{drawMode=!drawMode;canvas.classList.toggle("draw-mode",drawMode);document.getElementById("drawState").textContent=drawMode?"绘制BBox模式":"普通模式";toast(drawMode?"请拖拽绘制新实体框":"已退出绘制模式")};
+ canvas.addEventListener("pointerdown",e=>{if(!drawMode||e.target.closest(".bbox"))return;const r=canvas.getBoundingClientRect();start={x:e.clientX,y:e.clientY,r};preview=document.createElement("div");preview.className="draw-preview";canvas.appendChild(preview);window.addEventListener("pointermove",dm);window.addEventListener("pointerup",du,{once:true})});
+ function dm(e){if(!start)return;const r=start.r,x1=Math.max(r.left,Math.min(start.x,e.clientX)),x2=Math.min(r.right,Math.max(start.x,e.clientX)),y1=Math.max(r.top,Math.min(start.y,e.clientY)),y2=Math.min(r.bottom,Math.max(start.y,e.clientY));Object.assign(preview.style,{left:(x1-r.left)/r.width*100+"%",top:(y1-r.top)/r.height*100+"%",width:(x2-x1)/r.width*100+"%",height:(y2-y1)/r.height*100+"%"})}
+ function du(){window.removeEventListener("pointermove",dm);if(!preview)return;let l=parseFloat(preview.style.left),t=parseFloat(preview.style.top),w=parseFloat(preview.style.width),h=parseFloat(preview.style.height);preview.remove();preview=null;start=null;if(w<2||h<2)return;let n=1;while(draft.entities.some(e=>e.id==="E"+n))n++;const id="E"+n,arr=[Math.round(l*10),Math.round(t*10),Math.round((l+w)*10),Math.round((t+h)*10)];draft.entities.push({id,base_category:"HUMAN",level1_category:"HUMAN",level2_category:"HUMAN_ORDINARY",level3_category:"GENERIC_PERSON",sub_category:"普通人物",fine_category:{value:"普通人物（未细分）",taxonomy_id:"GENERIC_PERSON",certainty:"unknown"},bbox:arr,attributes:[],states:[],actions:[],visibility:"clear",source_type:"human_added"});const b=document.createElement("div");b.className="bbox";b.dataset.id=id;Object.assign(b.style,{left:l+"%",top:t+"%",width:w+"%",height:h+"%"});b.innerHTML=`<span class="label">${id} · 人物</span><i class="handle nw"></i><i class="handle ne"></i><i class="handle sw"></i><i class="handle se"></i>`;canvas.appendChild(b);b.addEventListener("pointerdown",down);persist();renderEntityChips();renderGroupSwitch();renderEventSwitch();renderRelations();select(b);drawMode=false;canvas.classList.remove("draw-mode");document.getElementById("drawState").textContent="普通模式";toast("已新增实体 "+id)}
+ document.getElementById("deleteBtn").onclick=()=>{if(!selectedBox)return;const id=selectedBox.dataset.id;if(!confirm("删除 "+id+"？相关 GROUP members / EVENT participant / Relation 引用将同步清理。"))return;draft.entities=draft.entities.filter(e=>e.id!==id);draft.groups.forEach(g=>g.members=(g.members||[]).filter(x=>x!==id));draft.events.forEach(e=>e.participants=(e.participants||[]).filter(p=>p.node!==id));draft.relations=draft.relations.filter(r=>r.subject!==id&&r.object!==id);selectedBox.remove();persist();renderEntityChips();renderGroupSwitch();if(selectedGroupId)selectGroup(selectedGroupId);renderEventSwitch();if(selectedEventId)selectEvent(selectedEventId);renderRelations();const n=canvas.querySelector(".bbox");if(n)select(n);toast("实体及引用已删除")};
+ document.getElementById("resetBtn").onclick=()=>{if(!selectedBox)return;const o=original[selectedBox.dataset.id];if(!o){toast("人工新增框没有 AI 原框");return}Object.assign(selectedBox.style,{left:o.l+"%",top:o.t+"%",width:o.w+"%",height:o.h+"%"});update(selectedBox);toast("已恢复 AI 原始 BBox")};
+}
+</script>
+</body></html>

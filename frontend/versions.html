@@ -1,15 +1,16 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 版本与审计</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「版本与审计」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>版本与审计 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="versions">
+
+<div class="page-head"><div><h1>版本与审计</h1><p>raw → ai_candidate → reviewer → expert → admin approved 版本不可变，支持全链路追溯。</p></div></div>
+<div class="grid cols-2"><div class="card card-pad"><h2 class="section-title">MURAL-02315 版本谱系</h2><div class="timeline"><div class="timeline-item"><div class="time">09:02</div><div class="text"><strong>raw rev1</strong> · 人物图 · image + caption 导入</div></div><div class="timeline-item"><div class="time">09:05</div><div class="text"><strong>ai_candidate v3</strong> · 种子候选 · S0–S7 规则引擎 · risk_score 62</div></div><div class="timeline-item"><div class="time">09:12</div><div class="text"><strong>ai_candidate v4</strong> · run_001 重跑（重新运行只生成新 Candidate，不覆盖后链版本）</div></div><div class="timeline-item"><div class="time">09:48</div><div class="text"><strong>reviewed v1</strong> · reviewer_01 校正 E1.bbox、确认 2 实体与 left_of 关系</div></div><div class="timeline-item"><div class="time">10:11</div><div class="text"><strong>expert reviewed</strong> · expert_01 复核通过</div></div><div class="timeline-item"><div class="time">10:36</div><div class="text"><strong>approved v1</strong> · admin_01 验收入库（版本不可变）</div></div></div></div>
+<div class="card card-pad"><h2 class="section-title">操作日志</h2><table><thead><tr><th>Actor</th><th>Action</th><th>字段</th><th>Before → After</th></tr></thead><tbody><tr><td>reviewer_01</td><td>EDIT</td><td>E1.bbox</td><td>[160,390,500,700] → [158,392,498,696]</td></tr><tr><td>reviewer_01</td><td>ACCEPT</td><td>E1.headwear</td><td>尖山小冠 → 尖山小冠（接受 AI 建议）</td></tr><tr><td>reviewer_01</td><td>ACCEPT</td><td>E2.hairstyle</td><td>倭堕髻 → 倭堕髻（接受 AI 建议）</td></tr><tr><td>expert_01</td><td>APPROVE</td><td>version</td><td>reviewed → expert_reviewed</td></tr><tr><td>admin_01</td><td>APPROVE</td><td>version</td><td>expert_reviewed → approved</td></tr></tbody></table></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>

@@ -1,15 +1,52 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · AI运行</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「AI运行」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>单张AI自动标注 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="ai-run">
+
+<div class="page-head"><div><h1>单张 AI 自动标注</h1><p>MURAL-02315 · 统一 image + title + caption 输入；异步执行并生成新的 Candidate 版本。</p></div><div class="actions"><a class="btn" href="sample-detail.html">返回样本</a><button id="startRun" class="btn primary">开始运行</button></div></div>
+<div class="grid cols-2">
+<div class="card card-pad"><h2 class="section-title">运行配置</h2><div class="kv"><div>样本</div><div>MURAL-02315 · 人物图</div><div>AI Config</div><div>prod-2026-09</div><div>Taxonomy</div><div>v1.2-custom</div><div>输入</div><div>image + title + caption</div></div><hr><label><input type="checkbox" id="force"> force_recompute=true</label><div class="callout" style="margin-top:12px">重新运行只生成新的 ai_candidate，不覆盖 Reviewed / Approved。</div></div>
+<div class="card card-pad"><h2 class="section-title">Run 状态</h2><div class="row"><strong id="runStatus">CREATED</strong><div class="spacer"></div><span id="runPct">0%</span></div><div class="progress" style="margin-top:8px"><span id="runBar" style="width:0%"></span></div><div id="stageText" style="margin-top:10px;color:#667085;font-size:12px">等待创建后台任务</div></div>
+</div>
+<div class="card card-pad" style="margin-top:14px"><h2 class="section-title">S0–S7 Pipeline</h2><div class="pipeline" id="pipe">
+<div class="stage"><div class="n">S0</div><div class="t">预处理</div><div class="d">解码、hash、caption规范化</div></div>
+<div class="stage"><div class="n">S1</div><div class="t">Caption解析</div><div class="d">结构化文本语义</div></div>
+<div class="stage"><div class="n">S2</div><div class="t">Grounding</div><div class="d">实体 → bbox</div></div>
+<div class="stage"><div class="n">S3</div><div class="t">遗漏发现</div><div class="d">image-only 补漏</div></div>
+<div class="stage"><div class="n">S4</div><div class="t">属性状态动作</div><div class="d">实体条件识别</div></div>
+<div class="stage"><div class="n">S5</div><div class="t">Group/Event</div><div class="d">群组、事件和角色</div></div>
+<div class="stage"><div class="n">S6</div><div class="t">Relation</div><div class="d">关系候选</div></div>
+<div class="stage"><div class="n">S7</div><div class="t">QC风险</div><div class="d">校验、风险评分</div></div></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{
+ const btn=document.getElementById('startRun'); if(!btn)return;
+ btn.addEventListener('click',()=>{
+   btn.disabled=true; let i=0; const stages=[...document.querySelectorAll('#pipe .stage')];
+   document.getElementById('runStatus').textContent='QUEUED';document.getElementById('stageText').textContent='任务已写入后台队列';
+   const muralId=(typeof getSampleMeta==='function'?getSampleMeta().mural_id:'MURAL-02315')||'MURAL-02315';
+   let result=null;
+   try{const xhr=new XMLHttpRequest();xhr.open('POST','/api/ai/run',false);xhr.setRequestHeader('Content-Type','application/json;charset=utf-8');xhr.send(JSON.stringify({mural_id:muralId}));if(xhr.status===200)result=JSON.parse(xhr.responseText)}catch(e){result=null}
+   const details=result?result.stages.map(s=>s.name+'：'+s.detail):null;
+   const ver=result?('v'+String(result.version).replace(/^v/,'')):'v4';
+   if(result&&typeof saveAICandidate==='function')saveAICandidate(muralId,result.candidate);
+   setTimeout(function tick(){
+     if(i>=stages.length){document.getElementById('runStatus').textContent='COMPLETED';document.getElementById('stageText').textContent='Candidate '+ver+' 已生成';btn.textContent='已完成';toast('AI Candidate '+ver+' 已创建');return}
+     if(i>0){stages[i-1].classList.remove('running');stages[i-1].classList.add('done')}
+     stages[i].classList.add('running');document.getElementById('runStatus').textContent='RUNNING';
+     const t=stages[i].querySelector('.t').textContent;
+     document.getElementById('stageText').textContent='正在执行 '+t+(details&&details[i]?' · '+details[i]:'');
+     const pct=Math.round((i+1)/stages.length*100);document.getElementById('runPct').textContent=pct+'%';document.getElementById('runBar').style.width=pct+'%';
+     i++;setTimeout(tick,450)
+   },500)
+ })
+},0)})
+</script>
+
+</body></html>

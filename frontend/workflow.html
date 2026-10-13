@@ -1,15 +1,41 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 标注工作流</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「标注工作流」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>标注工作流 - 壁画结构化语义标注系统</title><link rel="stylesheet" href="assets/shared.css"></head><body data-page="workflow">
+<div class="page-head"><div><h1>标注工作流</h1><p>管理员配置从 AI 自动标注到审核、专家复核、最终验收的流转规则。</p></div><button class="btn primary" onclick="toast('工作流配置已保存')">保存工作流</button></div>
+
+<div class="card card-pad">
+  <h2 class="section-title">标准工作流</h2>
+  <div class="workflow-strip">
+    <div class="wf-step done"><div class="n">Stage 1</div><div class="t">AI 自动标注</div></div><span class="wf-arrow">→</span>
+    <div class="wf-step active"><div class="n">Stage 2</div><div class="t">审核员校正</div></div><span class="wf-arrow">→</span>
+    <div class="wf-step"><div class="n">Stage 3</div><div class="t">专家审核员复核</div></div><span class="wf-arrow">→</span>
+    <div class="wf-step"><div class="n">Stage 4</div><div class="t">管理员验收入库</div></div>
+  </div>
+</div>
+
+<div class="grid cols-2" style="margin-top:14px">
+  <div class="card card-pad">
+    <h2 class="section-title">阶段职责</h2>
+    <div class="workflow-rule"><div class="rule-title">1. AI 自动标注</div><div class="rule-desc">输入 image + title + caption，经 S0–S7 八遍流水线（预处理 → Caption 解析 → Grounding → 遗漏发现 → 属性状态动作 → Group/Event → Relation → QC 风险）生成 Candidate；执行 Scene / Entity / Group / Event / Relation 与 QC。</div></div>
+    <div class="workflow-rule"><div class="rule-title">2. 审核员</div><div class="rule-desc">只能处理分配给自己的任务；负责 BBox、类别、Attribute/State/Action、Scene、Group/Event、Relation 的接受与校正。</div></div>
+    <div class="workflow-rule"><div class="rule-title">3. 专家审核员</div><div class="rule-desc">复核审核员提交的数据，重点处理专业身份、复杂叙事、不确定术语与跨模态冲突。</div></div>
+    <div class="workflow-rule"><div class="rule-title">4. 管理员</div><div class="rule-desc">检查流程完成度、阻断 QC、任务归属和版本信息；最终确认 Approved 入库。</div></div>
+  </div>
+  <div class="card card-pad">
+    <h2 class="section-title">流转规则</h2>
+    <div class="row" style="margin:10px 0"><div><strong>AI 完成后必须由管理员分配</strong><div style="font-size:10px;color:#667085">不允许审核员自行认领未分配样本</div></div><div class="spacer"></div><div class="switch on"></div></div>
+    <div class="row" style="margin:10px 0"><div><strong>专家复核为必经步骤</strong><div style="font-size:10px;color:#667085">所有 Reviewed 数据进入指定专家</div></div><div class="spacer"></div><div class="switch on"></div></div>
+    <div class="row" style="margin:10px 0"><div><strong>管理员最终验收</strong><div style="font-size:10px;color:#667085">只有管理员可生成 Approved</div></div><div class="spacer"></div><div class="switch on"></div></div>
+    <div class="field"><label>审核员提交后状态</label><select class="select" style="width:100%"><option>EXPERT_REVIEW</option></select></div>
+    <div class="field"><label>专家通过后状态</label><select class="select" style="width:100%"><option>ADMIN_ACCEPTANCE</option></select></div>
+    <div class="field"><label>管理员验收后状态</label><select class="select" style="width:100%"><option>APPROVED</option></select></div>
+  </div>
+</div>
+
+<div class="card card-pad" style="margin-top:14px">
+  <h2 class="section-title">退回规则</h2>
+  <table><thead><tr><th>发起角色</th><th>可退回到</th><th>典型原因</th></tr></thead><tbody>
+    <tr><td>专家审核员</td><td>审核员</td><td>专业身份错误、关系结构不完整、需要补标</td></tr>
+    <tr><td>管理员</td><td>专家审核员 / 审核员</td><td>流程未完成、QC未关闭、数据版本异常</td></tr>
+  </tbody></table>
+</div>
+<div id="toast" class="toast"></div><script src="assets/shared.js"></script></body></html>
