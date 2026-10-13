@@ -17,3 +17,6 @@ env/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# 本地部署脚本（含服务器信息，不进公开仓库）
+push.bat
