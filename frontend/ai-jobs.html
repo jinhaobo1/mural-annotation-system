@@ -1,15 +1,18 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · AI任务中心</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「AI任务中心」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI任务中心 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="ai-jobs">
+
+<div class="page-head"><div><h1>AI 任务中心</h1><p>监控单张 Run 和批量 Batch；前端不直接调用模型供应商。</p></div><div class="actions"><a class="btn" href="ai-run.html">单张 AI</a><a class="btn primary" href="ai-batch.html">创建批量任务</a></div></div>
+<div class="card card-pad"><table><thead><tr><th>任务</th><th>类型</th><th>范围</th><th>状态</th><th>进度</th><th>错误</th><th>操作</th></tr></thead><tbody>
+<tr><td>BATCH-07</td><td>批量</td><td>示例卷 · 8 条</td><td><span class="badge blue">RUNNING</span></td><td><div class="row"><div class="progress" style="width:160px"><span style="width:63%"></span></div><span>5/8</span></div></td><td>0</td><td><a class="btn small" href="ai-batch.html">详情</a></td></tr>
+<tr><td>RUN-8891</td><td>单张</td><td>MURAL-02315</td><td><span class="badge green">COMPLETED</span></td><td>100%</td><td>—</td><td><a class="btn small" href="ai-run.html">详情</a></td></tr>
+</tbody></table></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>

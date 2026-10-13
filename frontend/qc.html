@@ -1,15 +1,31 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 质检规则</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「质检规则」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>质检规则 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="qc">
+
+<div class="page-head"><div><h1>质检规则</h1><p>规则分 BLOCKING / WARNING / INFO，可配置执行时机和参数。</p></div><button class="btn primary" onclick="openModal('qcModal')">＋新增规则</button></div>
+<div class="card card-pad"><table><thead><tr><th>规则码</th><th>级别</th><th>说明</th><th>执行时机</th><th>启用</th><th>操作</th></tr></thead><tbody>
+<tr><td>QC_SCHEMA_INVALID</td><td><span class="badge red">BLOCKING</span></td><td>JSON Schema 非法（结构不符合教程 8.2 顶层结构规范）</td><td>AI落库前 / 提交前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>QC_BBOX_INVALID</td><td><span class="badge red">BLOCKING</span></td><td>实体 bbox 无效（需 [x1,y1,x2,y2] 且 x2&gt;x1、y2&gt;y1）</td><td>AI落库前 / 导出前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>RELATION_VALID</td><td><span class="badge red">BLOCKING</span></td><td>关系的 subject / object 引用了不存在的节点</td><td>S6 / 导出前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>MURAL_ID_REQUIRED</td><td><span class="badge red">BLOCKING</span></td><td>文档缺少壁画编号 mural_id</td><td>导出前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>QC_OVERALL_INFO</td><td><span class="badge orange">WARNING</span></td><td>整体信息检查（教程 8.1.1）：view_type / scene / region 是否遗漏</td><td>S2 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>ENTITY_COVERAGE</td><td><span class="badge orange">WARNING</span></td><td>实体检查（教程 8.1.2）：caption 主要对象是否全部出现；衣服帽子是否被误标成实体；重要器物是否遗漏；bbox 是否对应正确对象</td><td>S3 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>SEMANTIC_MIXUP</td><td><span class="badge orange">WARNING</span></td><td>语义检查（教程 8.1.3）：Attribute / State / Action 是否混淆；有明确客体的动作是否建立 Relation；群体描述是否建立 Group；多角色活动是否建立 Event；数量是否遗漏</td><td>S5-S6 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>COUNT_MISMATCH</td><td><span class="badge orange">WARNING</span></td><td>文本数量与视觉数量不一致（对应教程 8.1.3「数量是否遗漏」）</td><td>S3 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>CROSS_MODAL_CONFLICT</td><td><span class="badge orange">WARNING</span></td><td>caption 与视觉预测冲突（跨模态证据需人工裁决）</td><td>S4 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>CERTAINTY_CHECK</td><td><span class="badge orange">WARNING</span></td><td>特殊信息检查（教程 8.1.4）：「似为 / 应为」是否被错误升级为确定标签；probable 事实导出时保留并提示人工复核</td><td>S7 / 导出前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>EXPERT_TEXT_AS_FACT</td><td><span class="badge orange">WARNING</span></td><td>特殊信息检查（教程 8.1.4）：专家解释是否被误当成视觉事实</td><td>审核 / 专家复核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>VISIBILITY_DAMAGE</td><td><span class="badge orange">WARNING</span></td><td>特殊信息检查（教程 8.1.4）：残损实体是否记录 visibility（clear/partial/occluded/damaged/unclear/missing）</td><td>S4 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>INSCRIPTION_MISS</td><td><span class="badge orange">WARNING</span></td><td>特殊信息检查（教程 8.1.4）：题记是否遗漏；题记应标为 INSCRIPTION 并可建 identifies / labels / names 文字关联</td><td>S3 / 审核</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+<tr><td>SCENE_HIERARCHY</td><td><span class="badge blue">INFO</span></td><td>scene.annotations 为空（场景层级未标，导出时提醒补全）</td><td>导出前</td><td>是</td><td><button class="btn small" onclick="toast('已打开规则编辑')">编辑</button></td></tr>
+</tbody></table></div>
+<div class="modal-bg" id="qcModal"><div class="modal"><div class="modal-head"><strong>新增 QC 规则</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('qcModal')">×</button></div><div class="modal-body"><div class="field"><label>规则码</label><input class="input" style="width:100%"></div><div class="field"><label>严重度</label><select class="select" style="width:100%"><option>BLOCKING</option><option>WARNING</option><option>INFO</option></select></div><div class="field"><label>规则说明</label><textarea class="input" style="width:100%;height:80px"></textarea></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('qcModal')">取消</button><button class="btn primary" onclick="closeModal('qcModal');toast('QC规则已保存')">保存</button></div></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>

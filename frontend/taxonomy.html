@@ -1,15 +1,76 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 标注体系</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「标注体系」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自定义标注体系 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="taxonomy">
+
+<div class="page-head"><div><h1>自定义标注体系</h1><p>项目管理员/专家可维护三级实体分类、Scene/Event/Relation 词表和类别条件属性 Schema；发布后生成新的 taxonomy_version。</p></div>
+<div class="actions"><button class="btn" onclick="exportTaxonomy()">导出 JSON</button><button class="btn" onclick="openModal('importTaxModal')">导入体系</button><button class="btn primary" onclick="publishTax()">发布新版本</button></div></div>
+<div class="tabs"><div class="tab active" data-group="tax" data-tab="entity">实体分类</div><div class="tab" data-group="tax" data-tab="scene">Scene 层级 / Event</div><div class="tab" data-group="tax" data-tab="relation">Relation</div><div class="tab" data-group="tax" data-tab="attributes">Attribute / State / Action</div></div>
+
+<div class="tab-panel active" data-group="tax" data-panel="entity">
+<div class="tax-layout">
+<div class="card card-pad"><div class="row"><h2 class="section-title">三级实体分类树</h2><div class="spacer"></div><button class="btn small primary" onclick="openAddTerm(null)">＋一级</button></div><div id="taxTree"></div></div>
+<div class="card card-pad"><h2 class="section-title">标签编辑</h2><div id="termEditor"><div class="callout">点击左侧标签查看并编辑；支持新增子级、停用、删除和别名配置。</div></div></div>
+</div></div>
+
+<div class="tab-panel" data-group="tax" data-panel="scene">
+<div class="grid cols-2">
+  <div class="card card-pad"><div class="row"><h2 class="section-title">Scene 两级体系</h2><div class="spacer"></div><button class="btn small" onclick="addSceneL1()">＋一级场景</button></div><div id="sceneHierarchyEditor"></div></div>
+  <div class="card card-pad"><div class="row"><h2 class="section-title">Event 词表</h2><div class="spacer"></div><button class="btn small" onclick="addSimple('event')">＋Event</button></div><div class="chip-list" id="eventChips"></div><div class="callout" style="margin-top:12px">Scene 是画面主题层级；Event 是具体活动。比如 Scene“乐舞娱乐 → 舞蹈”，Event 可以是“舞蹈”，并绑定 performer / observer。</div></div>
+</div></div>
+<div class="tab-panel" data-group="tax" data-panel="relation"><div class="card card-pad"><div class="row"><h2 class="section-title">Relation 词表</h2><div class="spacer"></div><button class="btn small primary" onclick="addRelation()">＋ 新增关系</button></div><table id="relTable"><thead><tr><th>Family</th><th>Predicate</th><th>允许 Subject</th><th>允许 Object</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table></div></div>
+
+<div class="tab-panel" data-group="tax" data-panel="attributes"><div class="card card-pad"><div class="row"><h2 class="section-title">类别条件 Attribute / State / Action Schema</h2><div class="spacer"></div><button class="btn small primary" onclick="openModal('attrModal')">＋ 新增字段</button></div><table><thead><tr><th>类型</th><th>适用一级类别</th><th>字段代码</th><th>显示名</th><th>可选值（下拉框来源）</th><th>操作</th></tr></thead><tbody id="attrRows"></tbody></table></div></div>
+
+<div class="modal-bg" id="termModal"><div class="modal"><div class="modal-head"><strong>新增 / 编辑标签</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('termModal')">×</button></div><div class="modal-body"><input type="hidden" id="termParent"><div class="field"><label>代码</label><input id="termCode" class="input" style="width:100%" placeholder="例如 HUMAN / ATTENDANT"></div><div class="field"><label>名称</label><input id="termName" class="input" style="width:100%" placeholder="例如 人物 / 侍从类"></div><div class="field"><label>定义</label><textarea id="termDef" class="input" style="width:100%;height:80px"></textarea></div><div class="field"><label>别名（逗号分隔）</label><input id="termAliases" class="input" style="width:100%"></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('termModal')">取消</button><button class="btn primary" onclick="saveTerm()">保存</button></div></div></div>
+<div class="modal-bg" id="attrModal"><div class="modal"><div class="modal-head"><strong>新增属性字段</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('attrModal')">×</button></div><div class="modal-body">
+<div class="field-grid"><div class="field"><label>语义类型</label><select id="attrKind" class="select" style="width:100%"><option value="attributes">Attribute</option><option value="states">State</option><option value="actions">Action</option></select></div><div class="field"><label>适用一级类别</label><select id="attrCat" class="select" style="width:100%"><option>HUMAN</option><option>ANIMAL</option><option>OBJECT</option><option>SUPERNATURAL</option></select></div></div>
+<div class="field-grid"><div class="field"><label>字段代码</label><input id="attrCode" class="input" style="width:100%"></div><div class="field"><label>显示名</label><input id="attrName" class="input" style="width:100%"></div></div>
+<div class="field"><label>下拉候选值（逗号分隔）</label><input id="attrValues" class="input" style="width:100%" placeholder="例如：站立,端坐,跪坐,不详"><div class="hint">审核页面的 Attribute / State / Action 值下拉框直接读取这里的配置。</div></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('attrModal')">取消</button><button class="btn primary" onclick="saveAttr()">保存</button></div></div></div>
+<div class="modal-bg" id="importTaxModal"><div class="modal"><div class="modal-head"><strong>导入标注体系 JSON</strong><div class="spacer"></div><button class="btn small" onclick="closeModal('importTaxModal')">×</button></div><div class="modal-body"><textarea id="taxImportText" class="input" style="width:100%;height:280px" placeholder='粘贴 taxonomy JSON'></textarea></div><div class="modal-foot"><button class="btn" onclick="closeModal('importTaxModal')">取消</button><button class="btn primary" onclick="importTaxonomy()">导入</button></div></div></div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+<script>
+function renderSceneHierarchy(){
+ const root=document.getElementById('sceneHierarchyEditor');if(!root)return;const hs=getSceneHierarchy();
+ root.innerHTML=hs.map((h,i)=>`<div class="scene-row"><div class="row"><strong>${h.name}</strong><span class="badge">${h.id}</span><div class="spacer"></div><button class="btn small" onclick="addSceneL2(${i})">＋二级</button></div><div class="chip-list" style="margin-top:7px">${(h.children||[]).map(c=>`<span class="chip">${c.name}</span>`).join('')}</div></div>`).join('')
+}
+function addSceneL1(){const n=prompt('一级场景名称');if(!n)return;toast('原型已记录新增意图：'+n+'；正式版写入 taxonomy.scene_hierarchy 后发布新版本')}
+function addSceneL2(i){const n=prompt('二级场景名称');if(!n)return;toast('原型已记录新增二级场景：'+n)}
+</script>
+
+<script>
+let tax=getAnnotationTaxonomy();
+document.addEventListener('DOMContentLoaded',()=>setTimeout(renderAll,0));
+function persist(){saveAnnotationTaxonomy(tax)}
+function renderAll(){renderTree();renderChips();renderRel();renderAttrs();renderSceneHierarchy()}
+function children(parent){return tax.terms.filter(t=>t.parent===parent)}
+function renderTree(){
+ const root=document.getElementById('taxTree'); if(!root)return;root.innerHTML='';
+ function add(parent,level){children(parent).forEach(t=>{const d=document.createElement('div');d.className='tax-node';d.style.paddingLeft=(8+level*18)+'px';d.innerHTML=`<span>${level?'↳':'▾'}</span><strong>${t.id}</strong> ${t.name}<span class="tax-actions"><button class="icon-btn" title="新增子级">＋</button><button class="icon-btn" title="编辑">✎</button><button class="icon-btn" title="删除">×</button></span>`;d.addEventListener('click',e=>{if(e.target.tagName==='BUTTON')return;showEditor(t);document.querySelectorAll('.tax-node').forEach(x=>x.classList.remove('active'));d.classList.add('active')});const btns=d.querySelectorAll('button');btns[0].onclick=()=>openAddTerm(t.id);btns[1].onclick=()=>editTerm(t.id);btns[2].onclick=()=>deleteTerm(t.id);root.appendChild(d);add(t.id,level+1)})} add(null,0)
+}
+function showEditor(t){document.getElementById('termEditor').innerHTML=`<div class="kv"><div>代码</div><div>${t.id}</div><div>名称</div><div>${t.name}</div><div>父级</div><div>${t.parent||'ROOT'}</div><div>定义</div><div>${t.definition||'—'}</div><div>别名</div><div>${(t.aliases||[]).join('、')||'—'}</div></div><hr><div class="actions" style="justify-content:flex-start"><button class="btn small" onclick="editTerm('${t.id}')">编辑</button><button class="btn small" onclick="openAddTerm('${t.id}')">新增子级</button></div>`}
+function openAddTerm(parent){document.getElementById('termParent').value=parent||'';document.getElementById('termCode').value='';document.getElementById('termName').value='';document.getElementById('termDef').value='';document.getElementById('termAliases').value='';document.getElementById('termCode').disabled=false;openModal('termModal')}
+function editTerm(id){const t=tax.terms.find(x=>x.id===id);document.getElementById('termParent').value=t.parent||'';document.getElementById('termCode').value=t.id;document.getElementById('termCode').disabled=true;document.getElementById('termName').value=t.name;document.getElementById('termDef').value=t.definition||'';document.getElementById('termAliases').value=(t.aliases||[]).join(',');openModal('termModal')}
+function saveTerm(){const id=document.getElementById('termCode').value.trim(),name=document.getElementById('termName').value.trim();if(!id||!name){toast('代码和名称必填');return}let t=tax.terms.find(x=>x.id===id);if(!t){t={id,parent:document.getElementById('termParent').value||null};tax.terms.push(t)}t.name=name;t.definition=document.getElementById('termDef').value.trim();t.aliases=document.getElementById('termAliases').value.split(',').map(x=>x.trim()).filter(Boolean);persist();renderTree();closeModal('termModal');toast('标签已保存（草稿）')}
+function deleteTerm(id){if(children(id).length){toast('请先删除子级标签');return}if(!confirm('确认删除 '+id+'？'))return;tax.terms=tax.terms.filter(x=>x.id!==id);persist();renderTree();toast('已删除标签')}
+function renderChips(){['scene','event'].forEach(k=>{const root=document.getElementById(k+'Chips');if(root)root.innerHTML=tax[k+'s'].map(x=>`<span class="chip">${x} <button class="icon-btn" onclick="removeSimple('${k}','${x}')">×</button></span>`).join('')})}
+function addSimple(k){const v=prompt('输入新 '+(k==='scene'?'Scene':'Event')+' 标签');if(!v)return;tax[k+'s'].push(v);persist();renderChips()}
+function removeSimple(k,v){tax[k+'s']=tax[k+'s'].filter(x=>x!==v);persist();renderChips()}
+function renderRel(){const tb=document.querySelector('#relTable tbody');if(!tb)return;tb.innerHTML=tax.relations.map((r,i)=>`<tr><td>${r.family}</td><td>${r.predicate}</td><td>${r.sub}</td><td>${r.obj}</td><td>${r.active?'启用':'停用'}</td><td><button class="btn small" onclick="toggleRel(${i})">${r.active?'停用':'启用'}</button></td></tr>`).join('')}
+function addRelation(){const p=prompt('Predicate，例如 facing / contains');if(!p)return;tax.relations.push({family:'CUSTOM',predicate:p,sub:'ANY',obj:'ANY',active:true});persist();renderRel()}
+function toggleRel(i){tax.relations[i].active=!tax.relations[i].active;persist();renderRel()}
+function renderAttrs(){const tb=document.getElementById('attrRows');if(!tb)return;tb.innerHTML=(tax.fact_schemas||[]).map((a,i)=>`<tr><td>${a.kind==='attributes'?'Attribute':a.kind==='states'?'State':'Action'}</td><td>${(a.applies_to||[]).join(',')}</td><td>${a.code}</td><td>${a.name}</td><td>${(a.values||[]).join('、')}</td><td><button class="btn small danger" onclick="delAttr(${i})">删除</button></td></tr>`).join('')}
+function saveAttr(){const a={kind:document.getElementById('attrKind').value,applies_to:[document.getElementById('attrCat').value],code:document.getElementById('attrCode').value.trim(),name:document.getElementById('attrName').value.trim(),values:document.getElementById('attrValues').value.split(',').map(x=>x.trim()).filter(Boolean)};if(!a.code||!a.name||!a.values.length){toast('字段代码、显示名和候选值必填');return}(tax.fact_schemas=tax.fact_schemas||[]).push(a);persist();renderAttrs();closeModal('attrModal');toast('Schema字段已添加，审核页下拉框将自动同步')}
+function delAttr(i){tax.fact_schemas.splice(i,1);persist();renderAttrs()}
+function exportTaxonomy(){downloadText('taxonomy-custom.json',JSON.stringify(tax,null,2))}
+function importTaxonomy(){try{tax=JSON.parse(document.getElementById('taxImportText').value);persist();renderAll();closeModal('importTaxModal');toast('标注体系已导入为草稿')}catch(e){toast('JSON 解析失败')}}
+function publishTax(){const v=prompt('请输入新版本号','v1.2');if(!v)return;localStorage.setItem('taxonomy_version',v);toast('已发布 '+v+'；旧 Approved 数据不原地迁移')}
+</script>
+
+</body></html>

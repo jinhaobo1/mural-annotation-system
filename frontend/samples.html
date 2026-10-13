@@ -1,15 +1,29 @@
 <!-- Owner: 李鹏祥（B乙·前端） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>壁画结构化语义标注系统 · 壁画数据</title>
-  <link rel="stylesheet" href="assets/shared.css">
-</head>
-<body>
-  <!-- TODO: 填实「壁画数据」页面结构（页面主体 + 交互） -->
-  <script src="assets/shared.js"></script>
-  <!-- TODO: 页面脚本末尾调用 shell() + bootstrapSync() 完成初始化 -->
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>样本管理 - 壁画结构化语义标注系统</title>
+<link rel="stylesheet" href="assets/shared.css"></head>
+<body data-page="samples">
+
+<div class="page-head"><div><h1>样本管理</h1><p>每条样本至少包含图片和 caption。支持单张 AI 自动标注、批量 AI、进入审核和查看版本。</p></div>
+<div class="actions"><a class="btn" href="import.html">导入数据</a><a class="btn primary" href="ai-batch.html">批量 AI 自动标注</a></div></div>
+<div class="card card-pad">
+<div class="filters"><input class="input search" placeholder="搜索标题 / caption / 样本ID"><select class="select"><option>全部状态</option><option>RAW_READY</option><option>AI_READY</option><option>IN_REVIEW</option><option>APPROVED</option></select><select class="select"><option>全部视图类型</option><option>full_scene</option><option>partial_view</option><option>copy</option></select><button class="btn" onclick="toast('筛选条件已重置')">重置</button></div>
+<table><thead><tr><th>选择</th><th>图像</th><th>壁画ID / 名称</th><th>状态</th><th>AI风险</th><th>版本</th><th>操作</th></tr></thead><tbody>
+<tr><td><input type="checkbox" checked></td><td><img class="thumb" src="assets/sample_mural.png"></td><td><strong>MURAL-02315 · 人物图</strong><div style="color:#667085">绘一男一女。左侧男子头戴尖山小冠，身穿淡土红色交社衫，拱手，似施礼。右侧女子头梳倭堕髻，身穿淡土红色交社百戏衫，系淡土红色曳地长裙。腹部隆起，左手置腹前，右手指点。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">62 / 100</span></td><td>candidate v3</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox" checked></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02314 · 乐舞图</strong><div style="color:#667085">画面人物分上下两排，上排四人盘腿而坐，正观赏舞蹈，人物前面地面上左右各置一盘，盘内置放耳杯。下排四人作舞蹈状，左侧一女子长袖起舞，右侧三女身着曳地长裙，作细步曼舞状。</div></td><td><span class="badge">RAW_READY</span></td><td>—</td><td>raw</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small primary" href="ai-run.html">AI 自动标注</a></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02313 · 仪仗队列</strong><div style="color:#667085">14人组成的仪卫行列，进一步分为8人与6人两个子群。</div></td><td><span class="badge green">APPROVED</span></td><td><span class="badge green">18 / 100</span></td><td>approved v2</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="versions.html">版本</a></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02312 · 仪仗人物图</strong><div style="color:#667085">画面可见多人组成仪卫行列。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">71 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02311 · 宴饮图</strong><div style="color:#667085">画面上部为宴饮，下部为厨炊。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">55 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02310 · 车马出行图</strong><div style="color:#667085">人物与车马组成出行队列。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">83 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02309 · 门吏图</strong><div style="color:#667085">门侧立一人，似为文职幕僚。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">88 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02308 · 朱雀图</strong><div style="color:#667085">画面绘朱雀形象。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">31 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+<tr><td><input type="checkbox"></td><td><div class="thumb" style="display:grid;place-items:center">图</div></td><td><strong>MURAL-02307 · 庖厨图</strong><div style="color:#667085">画面表现厨炊活动与器物。</div></td><td><span class="badge blue">AI_READY</span></td><td><span class="badge orange">60 / 100</span></td><td>candidate v1</td><td><div class="row wrap"><a class="btn small" href="sample-detail.html">详情</a><a class="btn small" href="ai-run.html">重新运行 AI</a><button class="btn small" onclick="toast('请先通过“任务分配”指派给审核员')">分配审核</button></div></td></tr>
+</tbody></table>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/shared.js"></script>
+
+</body></html>
