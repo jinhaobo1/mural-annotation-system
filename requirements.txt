@@ -2,3 +2,5 @@
 fastapi>=0.110
 uvicorn>=0.29
 pydantic>=2.0
+# 测试依赖：fastapi TestClient / tests/test_api.py 需要（starlette 1.x 起要求 httpx2）
+httpx2

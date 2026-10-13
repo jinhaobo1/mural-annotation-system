@@ -1,32 +1,56 @@
 # -*- coding: utf-8 -*-
 # Owner: 蔡振翰（B丙·数据导出部署）
-"""导出：把审核草稿（review_draft）构建为标准导出文档，再序列化为 JSON / JSONL。
-
-导出文档附带 QC 校验结果（见 qc.validate_document）。
-"""
+"""导出模块：把审核草稿 / AI 候选导出为标准 JSON / JSONL（对应教程导出规范）。"""
+import json
 import datetime
-
 from . import qc
 
 
 def _now():
-    """返回当前时间的 ISO 字符串（秒级精度）。"""
     return datetime.datetime.now().isoformat(timespec="seconds")
 
 
 def build_document(draft, extra=None):
-    """把草稿 draft 组装成标准导出文档（含元数据 + 实体/关系/事件 + QC 报告）。
-
-    TODO: 组装标准结构，末尾调用 qc.validate_document 附上校验结果。
-    """
-    raise NotImplementedError("TODO: 构建导出文档结构")
+    """把前端 review_draft 结构包装成导出文档，并附加导出元数据与 QC 校验结果。"""
+    doc = dict(draft)
+    doc.setdefault("mural_id", (doc.get("sample") or {}).get("mural_id"))
+    passed, issues = qc.validate_document(doc)
+    doc["export_meta"] = {
+        "exported_at": _now(),
+        "format_version": "9.0",
+        "qc_passed": passed,
+        "qc_issues": issues,
+    }
+    if extra:
+        doc["export_meta"]["included_ai_candidates"] = extra
+    return doc
 
 
 def to_json(doc):
-    """序列化为 JSON 字符串（缩进、保证中文可读）。"""
-    raise NotImplementedError("TODO: json.dumps(doc, ensure_ascii=False, indent=2)")
+    return json.dumps(doc, ensure_ascii=False, indent=2)
 
 
 def to_jsonl(doc):
-    """序列化为 JSONL 字符串（每行一条记录）。"""
-    raise NotImplementedError("TODO: 将 doc 拆为多行 JSON 记录")
+    """扁平化为 JSONL：一行一个标注节点（scene/entity/group/event/relation/qc）。"""
+    lines = []
+    header = {
+        "kind": "document_header",
+        "mural_id": doc.get("mural_id"),
+        "name": doc.get("sample", {}).get("name") or doc.get("name"),
+        "versions": doc.get("versions"),
+        "exported_at": doc.get("export_meta", {}).get("exported_at"),
+    }
+    lines.append(header)
+    for a in (doc.get("scene") or {}).get("annotations", []):
+        lines.append({"kind": "scene", "value": a})
+    for e in doc.get("entities", []):
+        lines.append({"kind": "entity", **e})
+    for g in doc.get("groups", []):
+        lines.append({"kind": "group", **g})
+    for ev in doc.get("events", []):
+        lines.append({"kind": "event", **ev})
+    for r in doc.get("relations", []):
+        lines.append({"kind": "relation", **r})
+    for q in doc.get("qc_issues", []):
+        lines.append({"kind": "qc_issue", **q})
+    return "\n".join(json.dumps(l, ensure_ascii=False) for l in lines) + "\n"
