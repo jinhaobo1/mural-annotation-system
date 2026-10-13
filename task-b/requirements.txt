@@ -1,0 +1,23 @@
+# ==================================================
+# 壁画展示系统 · 依赖清单（锁定版本版）
+# 生成日期：2026-10-10
+# 来源：项目虚拟环境 pip freeze 实测导出
+# 安装方法：pip install -r requirements.txt
+# 推荐国内镜像加速：
+#   pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# ==================================================
+# ---------- 运行依赖（exporter.py Excel 导出必需） ----------
+openpyxl==3.1.5
+et-xmlfile==2.0.0
+# ---------- 打包依赖（重新打包 exporter.exe 时需要） ----------
+pyinstaller==6.22.3
+altgraph==0.17.5
+packaging==26.3
+pefile==2024.8.26
+pyinstaller-hooks-contrib==2026.8
+pywin32-ctypes==0.2.3
+setuptools==84.0.0
+# ---------- 说明 ----------
+# 1. 所有包均锁定精确版本号（==），保证跨电脑安装结果一致
+# 2. server.py（展示系统）与 JSON/CSV 导出仅用标准库，无需第三方包
+# 3. exporter.exe 已打包为独立程序，部署时无需安装任何依赖
